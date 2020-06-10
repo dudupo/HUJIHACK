@@ -8,6 +8,9 @@ from sklearn.model_selection import train_test_split
 # TODO maybe to add feature categorical for countries (Cause it's only in USA).
 #  We do know it's important that the distance and the countries themselves
 #  affects on delay flight
+
+
+# TODO maybe keep OriginState and DestState only for states.
 def load_data(path_csv):
     df = pd.read_csv(path_csv)
     df.dropna(inplace=True)
