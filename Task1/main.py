@@ -28,6 +28,7 @@ def load_data(path_csv):
     df = df.drop(columns="FlightDate")
 
     df = filter_distance(df)
+    df = filter_time_elapses(df)
 
     return df
 
@@ -40,4 +41,9 @@ def drop_non_positive_values(df, subject):
 
 def filter_distance(df):
     df = drop_non_positive_values(df, "Distance")
+    return df
+
+
+def filter_time_elapses(df):
+    df = drop_non_positive_values(df, "CRSElapsedTime")
     return df
