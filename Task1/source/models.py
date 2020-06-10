@@ -117,9 +117,9 @@ class Logistic(abcModel):
         self.mod = LogisticRegression(solver='liblinear')
 
 class DecisionTree(abcModel):
-    def __init__(self):
+    def __init__(self, max_depth=2):
         super().__init__()
-        self.mod = DecisionTreeClassifier()
+        self.mod = DecisionTreeClassifier(max_depth=2)
 
 class KNearestNeighbor(abcModel):
 

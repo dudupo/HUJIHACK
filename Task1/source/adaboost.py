@@ -22,7 +22,7 @@ class AdaBoost(object):
         WL : the class of the base weak learner
         T : the number of base learners to learn
         """
-        self.WL = WL
+        self.WL = [ WL for _ in range(T)]
         self.T = T
         self.h = [None]*T     # list of base learners
         self.w = np.zeros(T)  # weights
@@ -52,7 +52,8 @@ class AdaBoost(object):
         self.w = []
 
         for i in range(self.T):
-            self.h[i] = self.WL(D, X, y)
+            self.h[i] = self.WL[i]()
+            self.h[i].train(X, y)
             e_t, _out = find_loss_D(self.h[i], D, X, y)
             w = 0.5 * np.log( 1/e_t - 1 )
             D = normalize(D * np.e **( -w * y * _out ) )
@@ -85,6 +86,17 @@ class AdaBoost(object):
         """
         errors = sum(np.ones( len(y) )[ self.predict(X, max_t) != y ])
         return errors / len(y)
+
+
+class AdaBoostList(AdaBoost):
+    def __init__(self, WLs):
+        self.WL = WLs
+        self.T = len(WLs)
+        self.h = [None]*self.T   # lisself. of base learners
+        self.w = np.zeros(self.T)  # weights
+
+    def prdict(self, X):
+        return super().prdict(X, self.T)
 
 
 def test():
