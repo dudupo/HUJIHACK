@@ -27,4 +27,17 @@ def load_data(path_csv):
     df = df.drop(columns="Tail_Number")
     df = df.drop(columns="FlightDate")
 
+    df = filter_distance(df)
+
+    return df
+
+
+def drop_non_positive_values(df, subject):
+    subject = (df[subject]).to_numpy()
+    df = df.drop(np.where(subject <= 0)[0])
+    return df
+
+
+def filter_distance(df):
+    df = drop_non_positive_values(df, "Distance")
     return df
