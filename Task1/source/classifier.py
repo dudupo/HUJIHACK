@@ -1,28 +1,73 @@
-from HUJIHACK.Task1.source.strong import *
+# from strong import *
+from models import abcModel, DecisionTree, Logistic, SVM, DecisionStumpWarper
+from adaboost import AdaBoost, AdaBoostList
+from itertools import combinations
+import numpy as np
+import pandas as pd
+from binarysearch import binarysearch
+from datetime import date
+from random import shuffle
 from sklearn.model_selection import train_test_split
-
+import math
 factor_reason = {'CarrierDelay': 0, 'WeatherDelay': 1, 'NASDelay': 2, 'LateAircraftDelay': 3}
 
+#
+# def pre_proc_class_old(_dataset, droped_fe, categorical):
+#     y_factor = []
+#     _dataset = _dataset.dropna()
+#     _dataset['month'] = pd.DatetimeIndex(_dataset['FlightDate']).month
+#     _dataset['day'] = pd.DatetimeIndex(_dataset['FlightDate']).day
+#     _dataset['year'] = pd.DatetimeIndex(_dataset['FlightDate']).year
+#
+#     for factor in _dataset["DelayFactor"]:
+#         y_factor.append(factor_reason[factor])
+#     y_factor = np.array(y_factor)
+#     for index, row in _dataset.iterrows():
+#         # _dataset.loc[index, 'CRSElapsedTime'] = math.floor(row['CRSElapsedTime'] / 10)
+#         _dataset.loc[index, 'CRSArrTime'] = math.floor(row['CRSArrTime'] / 100)
+#         _dataset.loc[index, 'CRSDepTime'] = math.floor(row['CRSDepTime'] / 100)
+#         _dataset.loc[index, 'Distance'] = math.floor(row['Distance'] / 10)
+#
+#     cat = pd.DataFrame(pd.get_dummies(_dataset[categorical].astype('category')))
+#     _dataset = _dataset.drop(droped_fe + categorical, axis=1)
+#     _dataset_prepoc = pd.concat([_dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
+#     return _dataset_prepoc, y_factor
 
-def pre_proc_class(_dataset, droped_fe, categorical):
-    y_factor = []
-    _dataset = _dataset.dropna()
+
+def pre_proc_class(_dataset, categorical):
     _dataset['month'] = pd.DatetimeIndex(_dataset['FlightDate']).month
     _dataset['day'] = pd.DatetimeIndex(_dataset['FlightDate']).day
     _dataset['year'] = pd.DatetimeIndex(_dataset['FlightDate']).year
 
-    for factor in _dataset["DelayFactor"]:
-        y_factor.append(factor_reason[factor])
-    y_factor = np.array(y_factor)
     for index, row in _dataset.iterrows():
-        _dataset.loc[index, 'CRSElapsedTime'] = math.floor(row['CRSElapsedTime'] / 10)
+        # _dataset.loc[index, 'CRSElapsedTime'] = math.floor(row['CRSElapsedTime'] / 10)
         _dataset.loc[index, 'CRSArrTime'] = math.floor(row['CRSArrTime'] / 100)
         _dataset.loc[index, 'CRSDepTime'] = math.floor(row['CRSDepTime'] / 100)
+        _dataset.loc[index, 'Distance'] = math.floor(row['Distance'] / 10)
 
     cat = pd.DataFrame(pd.get_dummies(_dataset[categorical].astype('category')))
-    _dataset = _dataset.drop(droped_fe + categorical, axis=1)
     _dataset_prepoc = pd.concat([_dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
-    return _dataset_prepoc, y_factor
+
+    return _dataset_prepoc
+
+
+def pre_proc_delay(dataset, drop_fe_delay, categorical):
+    y = []
+    for _bool in dataset["ArrDelay"] > 0:
+        y.append({False: [0], True: [1]}[_bool])
+    y = np.array(y)
+    dataset = dataset.drop(drop_fe_delay + categorical, axis=1)
+    return dataset, y
+
+
+def pre_proc_factor(dataset, drop_fe_factor, categorical):
+    y_factor = []
+    dataset = dataset.dropna()
+    for factor in dataset["DelayFactor"]:
+        y_factor.append(factor_reason[factor])
+    y_factor = np.array(y_factor)
+    dataset = dataset.drop(drop_fe_factor + categorical, axis=1)
+    return dataset, y_factor
 
 
 def pred_trees(x, y, x_test, y_test):
@@ -44,23 +89,23 @@ def pred_trees(x, y, x_test, y_test):
 def pred_forest(x, y, x_test, y_test):
     from sklearn.ensemble import RandomForestClassifier
 
-    model = RandomForestClassifier(random_state=40)
+    model = RandomForestClassifier(random_state=20)
     model.fit(x, y)
     print(model.score(x_test, y_test))
 
-def identify_corelated_features(df):
-    corr = df.corr()
-    print(sns.heatmap(corr))
-    columns = np.full((corr.shape[0],), True, dtype=bool)
-    for i in range(corr.shape[0]):
-        for j in range(i + 1, corr.shape[0]):
-            if corr.iloc[i, j] >= 0.9:
-                if columns[j]:
-                    columns[j] = False
-    selected_columns = df.columns[columns]
-    df = df[selected_columns]
-    return df
 
+def identify_corelated_features(df):
+    # corr = df.corr()
+    # print(sns.heatmap(corr))
+    # columns = np.full((corr.shape[0],), True, dtype=bool)
+    # for i in range(corr.shape[0]):
+    #     for j in range(i + 1, corr.shape[0]):
+    #         if corr.iloc[i, j] >= 0.9:
+    #             if columns[j]:
+    #                 columns[j] = False
+    # selected_columns = df.columns[columns]
+    # df = df[selected_columns]
+    return df
 
 
 def pred(x, y, x_test, y_test):
@@ -99,22 +144,40 @@ featuers = ["DayOfWeek",
             "CRSElapsedTime",
             "Distance"]
 
-droped_fe_new = ['Flight_Number_Reporting_Airline',
-                 'Tail_Number',
-                 'ArrDelay',
-                 'DelayFactor',
-                 "OriginCityName",
-                 "OriginState",
-                 "DestCityName",
-                 "DestState", 'FlightDate']
+droped_fe_factor = ['Flight_Number_Reporting_Airline',
+                    'Tail_Number',
+                    'DelayFactor',
+                    "OriginCityName",
+                    "OriginState",
+                    "DestCityName",
+                    "DestState", 'FlightDate', "CRSElapsedTime"]
+
+droped_fe_delay = ['Flight_Number_Reporting_Airline',
+                   'Tail_Number',
+                   "OriginCityName",
+                   "OriginState",
+                   "DestCityName",
+                   "DestState", 'FlightDate', "CRSElapsedTime", 'ArrDelay', 'DelayFactor']
 
 categorical_new = ['Reporting_Airline', 'Origin', 'Dest']
-if __name__ == '__main__':
-    _dataset = pd.read_csv("../data/train_data.csv", nrows=200000)
 
-    x, y_factor = pre_proc_class(_dataset, droped_fe_new, categorical_new)
-    x = identify_corelated_features(x)
-    x_train, x_test, y_train, y_test = train_test_split(x, y_factor)
+def final_pre_proc(_dataset):
+    x = pre_proc_class(_dataset, categorical_new)
+    x_delay,y_delay = pre_proc_delay(x,droped_fe_delay,categorical_new)
+    x_factor,y_factor = pre_proc_delay(x,droped_fe_factor,categorical_new)
+
+    x_factor = identify_corelated_features(x_factor)
+    return x_delay, y_delay, x_factor,y_factor
+
+if __name__ == '__main__':
+    _dataset = pd.read_csv("~/data/train_data.csv", nrows=100000)
+
+    x = pre_proc_class(_dataset, categorical_new)
+    x_delay,y_delay = pre_proc_delay(x,droped_fe_delay,categorical_new)
+    x_factor,y_factor = pre_proc_delay(x,droped_fe_factor,categorical_new)
+
+    x_factor = identify_corelated_features(x_factor)
+    x_train, x_test, y_train, y_test = train_test_split(x_factor, y_factor)
     # print(x['month'])
 
     # print(y_factor)

@@ -6,6 +6,11 @@ import pandas as pd
 from binarysearch import binarysearch
 from datetime import date
 from random import shuffle
+
+
+from classifier import final_pre_proc
+from sklearn.model_selection import train_test_split
+
 # class WeakFactory:
 #     class WeakLernerByFeature(abcModel):
 
@@ -103,7 +108,7 @@ def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal= [] , _hased
     if len(teams) == 0:
         teams = [ [featuer] for  featuer in featuers  ]
 
-    agents = 400
+    agents = 42
     group_size = 2
     _hashed = set()
     new_team = []
@@ -169,6 +174,8 @@ def pre_proc(_dataset, droped_fe, categorical ):
         _dataset_prepoc = pd.concat([ _dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
     else :
         _dataset_prepoc = _dataset 
+
+    print(_dataset_prepoc)
     return _dataset_prepoc, y
 
 
@@ -190,7 +197,7 @@ featuers =   ["DayOfWeek",
 
 droped_fe = [ 'Flight_Number_Reporting_Airline',
               'Tail_Number',
-              'DayOfWeek',
+            #   'DayOfWeek',
               'FlightDate',
               'ArrDelay' ,
               'DelayFactor' ]
@@ -207,7 +214,7 @@ categorical = [
 
 
 if __name__ == "__main__" :
-    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=300)
+    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=700)
 
     print("[#] before pre processing")
     print(original_dataset)
@@ -224,12 +231,17 @@ if __name__ == "__main__" :
     '''
     _mods = {}  
     _minrange, _maxrange = -30, 30
-    _dataset, y = pre_proc(original_dataset, droped_fe + categorical, [] )
+    #_dataset, y = pre_proc(original_dataset, droped_fe , categorical )
+    _dataset, y, x_factor,y_factor = final_pre_proc(original_dataset)
+
+    print(_dataset)
+    print( y )
+
     start_range , end_range = np.ones(len(y)) * _minrange , np.ones(len(y)) * _maxrange
     for i, time in enumerate( np.arange(_minrange, _maxrange,  _maxrange/ 2**5 ) ):
         train_error, _featuers, _mods[time] = learn(_dataset,
                         generateY(original_dataset, time),
-                            _dataset.keys() ,orignal=featuers)  
+                            _dataset.keys() ,orignal=_dataset.keys())  
         print( f"{time} : {_featuers} : {train_error}")
 
     # print( i, time)
@@ -239,9 +251,8 @@ if __name__ == "__main__" :
     _middles = Bagent.predict( _dataset , start_range , end_range)
     print(_middles)
 
-
-    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=10000 )
-    _dataset, y = pre_proc(original_dataset, droped_fe + categorical, [] )
+    _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=20000 )[1000:] )
+    # _dataset, y = pre_proc(original_dataset, droped_fe , categorical )
     _middles = Bagent.mods[0.0].predict( _dataset )
     _middles[ _middles > 0 ] = 1
     t = sum( (_middles- y.flatten())**2/len(y))
