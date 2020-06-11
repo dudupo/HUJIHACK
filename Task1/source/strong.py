@@ -53,7 +53,7 @@ def generateTeamClass(featuers):
             self.featuers = featuers
 
         def filterX( self, X ):
-            ret = pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }).to_numpy()
+            ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
             return ret
 
         def train(self, X, y):

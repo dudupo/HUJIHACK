@@ -11,7 +11,7 @@ from mpl_toolkits.mplot3d import \
     Axes3D  # <--- This is important for 3d plotting
 import pandas as pd
 from pandas import DataFrame
-from plotnine import *
+# from plotnine import *
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
