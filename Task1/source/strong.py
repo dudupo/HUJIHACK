@@ -108,8 +108,7 @@ def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal=[] , _hased 
     if len(teams) == 0:
         teams = [ [featuer] for  featuer in featuers  ]
 
-    agents = 42
-    group_size = 2
+    agents = 100
     _hashed = set()
     new_team = []
     def create_subgroups():
@@ -119,7 +118,6 @@ def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal=[] , _hased 
                 if featuer not in team:
                     _hash = hash_strings(orignal, team + [featuer] ) 
                     if _hash not in _hashed:
-                        # print(f"i was here {team + [featuer]}, _hash : {_hash}")
                         subgroups.append( generateTeamClass( team + [featuer] ) )
                         _hashed.add(_hash)
         return subgroups
@@ -133,13 +131,12 @@ def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal=[] , _hased 
         strongGroups.append( _model )
         heapq.heappush( heap,  (-calc_error( _model, _dataframe, y, agents ) , _model.h[0].featuers, _model  ) )
 
-        if len(heap) > 30000:
+        if len(heap) > 3:
             heapq.heappop( heap )
 
     if depth == 0:
         while len(heap) > 1:
             train_error, _featuers, _model =  heapq.heappop( heap )
-            #print(train_error)
         train_error, _featuers, _model =  heapq.heappop( heap )
         return train_error, _featuers, _model
     
@@ -149,7 +146,6 @@ def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal=[] , _hased 
             heapq.heappop( heap )
             train_error, _featuers, _model =  heapq.heappop( heap )
             teams.append( _featuers  )
-        #print(teams)
         return learn(_dataframe, y, featuers, teams, depth - 1,
          orignal=orignal )
 
@@ -161,9 +157,6 @@ def generateY(_dataset, treshold=0):
         return np.array( y )
 
 def pre_proc(_dataset, droped_fe, categorical ):
-
-    # def remove_end_cases(_frame):
-    #     return _frame[  _frame['price'] > 0  ]
     y = generateY(_dataset)
 
     if len(categorical) > 0 :
@@ -219,48 +212,29 @@ if __name__ == "__main__" :
 
     print("[#] before pre processing")
     print(original_dataset)
-    # _dataset, y  = pre_proc(_dataset, droped_fe, categorical )
-    print("[#] after pre processing")
-    print("[#] y' vector ")
-    
-    # _mods = learn(_dataset, y, _dataset.keys() )
-    # print("[#] best featuers:")
-    # print(_mod.h[0].featuers)
-
-    '''
-        just to check compiletion.  
-    '''
     _mods = {}  
     _minrange, _maxrange = -30, 30
-    #_dataset, y = pre_proc(original_dataset, droped_fe , categorical )
     _dataset, y, x_factor,y_factor = final_pre_proc(original_dataset)
-
     print(_dataset)
     print( y )
-
 
 
     start_range , end_range = np.ones(len(y)) * _minrange , np.ones(len(y)) * _maxrange
     for i, time in enumerate( np.arange(_minrange, _maxrange,  _maxrange/ 2**5 ) ):
         train_error, _featuers, _mods[time] = learn(_dataset,
                         generateY(original_dataset, time), 
-                            _dataset.keys(), teams= [  ['CRSDepTime', 'DayOfWeek'] ], orignal=_dataset.keys())  
+                            _dataset.keys(), orignal=_dataset.keys())  
         print( f"{time} : {_featuers} : {train_error}")
-
-    # print( i, time)
-    #times_tersholds = { time : _mods[i] for i, time in enumerate( range(0, 1, 2**-4) ) }
 
     Bagent = binarysearch( _mods ) 
     _middles = Bagent.predict( _dataset , start_range , end_range)
     print(_middles)
 
     _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=10000 )[9800:] )
-    # _dataset, y = pre_proc(original_dataset, droped_fe , categorical )
     _middles = Bagent.mods[0.0].predict( _dataset )
     _middles[ _middles > 0 ] = 1
     t = sum( (_middles- y.flatten())**2/len(y))
     print (  f"[error]: {t}"  )    
-    #print( )
 
 
 
