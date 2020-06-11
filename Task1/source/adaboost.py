@@ -43,7 +43,7 @@ class AdaBoost(object):
 
         def find_loss_D(h, D, X, y):
             _out = h.predict(X)
-            return np.sum( D[_out != y] ), _out
+            return np.sum( D[_out != y.transpose()[0]] ), _out
 
         def normalize(vec):
             r = np.sum(vec )
