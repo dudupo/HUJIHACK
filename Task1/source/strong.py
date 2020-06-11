@@ -1,4 +1,4 @@
-from models import abcModel, DecisionTree, Logistic, SVM
+from models import abcModel, DecisionTree, Logistic, SVM, DecisionStumpWarper
 from adaboost import AdaBoost, AdaBoostList
 from itertools import combinations
 import numpy as np
@@ -58,39 +58,47 @@ def generateTeamClass(featuers):
                 ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
                 return ret
 
-            def train(self, X, y):
+            def train(self, X, y, D=None):
                 print(f"[@] train on features : { self.featuers}")
-                super().fit(
-                    np.array(self.filterX(X)),  y)
+                
+                if D is None:
+                    super().fit(
+                        np.array(self.filterX(X)),  y)
+                else:
+                    super().fit(
+                        np.array(self.filterX(X)), y, D)
+            
             def predict(self, X):
                 return super().predict( self.filterX(X) )
         
         return WeakTeam
     #return generateWeakClass( DecisionTree ) 
     # return generateWeakClass( Logistic )
-    return generateWeakClass(Logistic)
+
+    return generateWeakClass(DecisionStumpWarper)
 
 
+def calc_error(model, _dataframe, y, agents):
+    _error = 0
+    z = (y.flatten() - 0.5 * np.ones(len(y)))*2
+    for _bool in (model.predict(_dataframe, max_t=agents ) != z ): 
+        _error += {  False : 0 , True : 1  }[ _bool ]
+    return _error / len( y ) 
 
 
 def learn(_dataframe, y, featuers ):
-    agents = 2
-    group_size = 1
+    agents = 50
+    group_size = 2
     subgroups = [ generateTeamClass(team) for team in combinations(featuers, group_size) ]
-
-    def calc_error(model, _dataframe, y):
-        _error = 0
-        for _bool in (model.predict(_dataframe, max_t=1 ) != y).flatten(): 
-            _error += {  False : 0 , True : 1  }[ _bool ]
-        return _error / len( y ) 
 
     strongGroups = []
     for weak in subgroups:
-        _model = AdaBoost(weak, agents)
+        _model = AdaBoost(weak, agents, support_wights=True)
         _model.train(_dataframe, y)
         strongGroups.append( _model )
     
-    return strongGroups[ np.argmin( [  calc_error( _model, _dataframe, y ) for _model in strongGroups] )]
+    return strongGroups[ np.argmin(
+         [  calc_error( _model, _dataframe, y, agents ) for _model in strongGroups] )]
 
 
 def generateY(_dataset, treshold=0):
@@ -105,9 +113,15 @@ def pre_proc(_dataset, droped_fe, categorical ):
     #     return _frame[  _frame['price'] > 0  ]
     y = generateY(_dataset)
 
-    cat = pd.DataFrame(  pd.get_dummies(_dataset[categorical].astype('category') ))
+    if len(categorical) > 0 :
+        cat = pd.DataFrame(  pd.get_dummies(_dataset[categorical].astype('category') ))
+
+
     _dataset = _dataset.drop( droped_fe + categorical, axis=1)
-    _dataset_prepoc = pd.concat([ _dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
+    if len(categorical) > 0 :
+        _dataset_prepoc = pd.concat([ _dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
+    else :
+        _dataset_prepoc = _dataset 
     return _dataset_prepoc, y
 
 
@@ -129,6 +143,7 @@ featuers =   ["DayOfWeek",
 
 droped_fe = [ 'Flight_Number_Reporting_Airline',
               'Tail_Number',
+              'DayOfWeek',
               'FlightDate',
               'ArrDelay' ,
               'DelayFactor' ]
@@ -162,9 +177,9 @@ if __name__ == "__main__" :
     '''
     _mods = {}  
     _maxrange = 30
-    _dataset, y = pre_proc(original_dataset, droped_fe + categorical, ['DayOfWeek'] )
+    _dataset, y = pre_proc(original_dataset, droped_fe + categorical, [] )
     start_range , end_range = np.zeros(len(y)) , np.ones(len(y)) * _maxrange
-    for i, time in enumerate( np.arange(0, _maxrange,  _maxrange/ 2**4 ) ):
+    for i, time in enumerate( np.arange(0, _maxrange,  _maxrange/ 2**5 ) ):
         _mods[time] = learn(_dataset,
                         generateY(original_dataset, time),
                             _dataset.keys() )  
@@ -177,7 +192,13 @@ if __name__ == "__main__" :
     print(_middles)
 
 
-
+    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=10000 )[100:]
+    _dataset, y = pre_proc(original_dataset, droped_fe + categorical, [] )
+    _middles = Bagent.mods[0.0].predict( _dataset )
+    _middles[ _middles > 0 ] = 1
+    t = sum( (_middles- y.flatten())**2/len(y))
+    print (  f"[error]: {t}"  )    
+    #print( )
 
 
 

@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 
 class AdaBoost(object):
 
-    def __init__(self, WL, T):
+    def __init__(self, WL, T , support_wights = False):
         """
         Parameters
         ----------
@@ -26,6 +26,7 @@ class AdaBoost(object):
         self.T = T
         self.h = [None]*T     # list of base learners
         self.w = np.zeros(T)  # weights
+        self.support_wights = support_wights
 
         # self._predict = np.vactorize(WL.prdeict)
 
@@ -38,12 +39,12 @@ class AdaBoost(object):
         Train this classifier over the sample (X,y)
         After finish the training return the weights of the samples in the last iteration.
         """
-
+        y = y.flatten()
         D = np.ones( len( y ) ) * 1/len( y )
 
         def find_loss_D(h, D, X, y):
-            _out = h.predict(X)
-            return np.sum( D[_out != y.transpose()[0]] ), _out
+            _out = h.predict(X).flatten()
+            return np.sum( D[_out != y.transpose()] ), _out
 
         def normalize(vec):
             r = np.sum(vec )
@@ -53,8 +54,14 @@ class AdaBoost(object):
 
         for i in range(self.T):
             self.h[i] = self.WL[i]()
-            self.h[i].train(X, y)
+            if self.support_wights:
+                self.h[i].train(X, y, D)
+            else:
+                self.h[i].train(X, y)
+                
             e_t, _out = find_loss_D(self.h[i], D, X, y)
+            print("[%]et:")
+            print(e_t)
             w = 0.5 * np.log( 1/e_t - 1 )
             D = normalize(D * np.e **( -w * y * _out ) )
             self.w.append(w)

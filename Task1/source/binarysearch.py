@@ -5,11 +5,9 @@ class binarysearch:
 
     def __init__ (self, models):
         self.mods = models
-        self.iterations = 3
+        self.iterations = 5
 
-    def get_model(self, times_delay):
-        return self.mod
-
+ 
     '''
          for _bool in re > middle ] )
                 y = np.array( [ {  False : [0] , True : [1]  }[ _bool ]
@@ -29,7 +27,7 @@ class binarysearch:
             res = np.zeros( shape = start_range.shape)
             for i, time in enumerate(start_range):
                 res[i] = self._predict(X.iloc[[i]] , start_range[i])[0]
-            
+            res = (res +  np.ones(len(res)))/2
             start_range, end_range = (1 - res) * start_range + res * middle  , (1 - res) * middle +  res * end_range
         return middle
 

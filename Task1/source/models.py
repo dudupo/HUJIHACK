@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 
 from random import random
 
+from ex4_tools import DecisionStump
+
 
 class abcModel:
 
@@ -155,6 +157,17 @@ class LassoClassifier(abcModel):
         super().__init__()
         self.mod = Lasso(alpha=0, normalize=True)
 
+class DecisionStumpWarper(abcModel):
+    def __init__(self):
+        super().__init__()
+        self.mod = DecisionStump( )
+
+    def fit(self, X, y, D=None):
+        self.mod.fit(D, X, y.flatten())
+    
+    def predict(self, X):
+        return self.mod.predict(X)
+    
 
 def label_f(weight, bias):
     def _label_f(x):

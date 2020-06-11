@@ -28,10 +28,12 @@ def find_threshold(D, X, y, sign, j):
     sort_idx = np.argsort(X[:, j])
     X, y, D = X[sort_idx], y[sort_idx], D[sort_idx]
 
+
     thetas = np.concatenate([[-np.inf], (X[1:, j] + X[:-1, j]) / 2, [np.inf]])
     minimal_theta_loss = np.sum(D[y == sign])  # loss of the smallest possible theta
     losses = np.append(minimal_theta_loss, minimal_theta_loss - np.cumsum(D * (y * sign)))
     min_loss_idx = np.argmin(losses)
+
     return losses[min_loss_idx], thetas[min_loss_idx]
 
 
@@ -40,13 +42,13 @@ class DecisionStump(object):
     Decision stump classifier for 2D samples
     """
 
-    def __init__(self, D, X, y):
+    def __init__(self):
         self.theta = 0
         self.j = 0
         self.sign = 0
-        self.train(D, X, y)
+        
 
-    def train(self, D, X, y):
+    def fit(self, D, X, y):
         """
         Train the classifier over the sample (X,y) w.r.t. the weights D over X
         Parameters
@@ -55,6 +57,7 @@ class DecisionStump(object):
         X : samples, shape=(num_samples, num_features)
         y : labels, shape=(num_samples)
         """
+        print(f"X: {X.shape}")
         loss_star, theta_star = np.inf, np.inf
         for sign, j in product([-1, 1], range(X.shape[1])):
             loss, theta = find_threshold(D, X, y, sign, j)
@@ -125,4 +128,7 @@ def generate_data(num_samples, noise_ratio):
     y[np.random.choice(num_samples, int(noise_ratio * num_samples))] *= -1
 
     return X, y
+
+
+
 
