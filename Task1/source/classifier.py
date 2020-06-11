@@ -45,9 +45,11 @@ def pre_proc_class(_dataset, categorical):
         _dataset.loc[index, 'CRSDepTime'] = math.floor(row['CRSDepTime'] / 100)
         _dataset.loc[index, 'Distance'] = math.floor(row['Distance'] / 10)
 
-    cat = pd.DataFrame(pd.get_dummies(_dataset[categorical].astype('category')))
-    _dataset_prepoc = pd.concat([_dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
-
+    if len(categorical) >0 :
+        cat = pd.DataFrame(pd.get_dummies(_dataset[categorical].astype('category')))
+        _dataset_prepoc = pd.concat([_dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
+    else:
+        _dataset_prepoc = _dataset
     return _dataset_prepoc
 
 
@@ -157,9 +159,9 @@ droped_fe_delay = ['Flight_Number_Reporting_Airline',
                    "OriginCityName",
                    "OriginState",
                    "DestCityName",
-                   "DestState", 'FlightDate', "CRSElapsedTime", 'ArrDelay', 'DelayFactor']
+                   "DestState", 'FlightDate', "CRSElapsedTime", 'ArrDelay', 'DelayFactor', 'Reporting_Airline', 'Origin', 'Dest']
 
-categorical_new = ['Reporting_Airline', 'Origin', 'Dest']
+categorical_new = [] #  ['Reporting_Airline', 'Origin', 'Dest']
 
 def final_pre_proc(_dataset):
     x = pre_proc_class(_dataset, categorical_new)

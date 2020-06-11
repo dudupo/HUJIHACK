@@ -103,7 +103,7 @@ def hash_strings(featuers, _list):
         base*= 10
     return ret 
 
-def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal= [] , _hased = set()):
+def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal=[] , _hased = set()):
 
     if len(teams) == 0:
         teams = [ [featuer] for  featuer in featuers  ]
@@ -117,8 +117,9 @@ def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal= [] , _hased
         for featuer in featuers:
             for team in teams:
                 if featuer not in team:
-                    _hash = hash_strings(team + [featuer], orignal ) 
+                    _hash = hash_strings(orignal, team + [featuer] ) 
                     if _hash not in _hashed:
+                        # print(f"i was here {team + [featuer]}, _hash : {_hash}")
                         subgroups.append( generateTeamClass( team + [featuer] ) )
                         _hashed.add(_hash)
         return subgroups
@@ -132,7 +133,7 @@ def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal= [] , _hased
         strongGroups.append( _model )
         heapq.heappush( heap,  (-calc_error( _model, _dataframe, y, agents ) , _model.h[0].featuers, _model  ) )
 
-        if len(heap) > 300000:
+        if len(heap) > 30000:
             heapq.heappop( heap )
 
     if depth == 0:
@@ -147,10 +148,10 @@ def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal= [] , _hased
         while len(heap) > 1:
             heapq.heappop( heap )
             train_error, _featuers, _model =  heapq.heappop( heap )
-            teams.append(   [ _featuers ])
+            teams.append( _featuers  )
         #print(teams)
         return learn(_dataframe, y, featuers, teams, depth - 1,
-         orignal=orignal, _hased= set(  [ hash_strings(team , orignal )  for team in teams  ]  ) )
+         orignal=orignal )
 
 
 def generateY(_dataset, treshold=0):
@@ -214,7 +215,7 @@ categorical = [
 
 
 if __name__ == "__main__" :
-    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=700)
+    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=7000)
 
     print("[#] before pre processing")
     print(original_dataset)
@@ -237,11 +238,13 @@ if __name__ == "__main__" :
     print(_dataset)
     print( y )
 
+
+
     start_range , end_range = np.ones(len(y)) * _minrange , np.ones(len(y)) * _maxrange
     for i, time in enumerate( np.arange(_minrange, _maxrange,  _maxrange/ 2**5 ) ):
         train_error, _featuers, _mods[time] = learn(_dataset,
-                        generateY(original_dataset, time),
-                            _dataset.keys() ,orignal=_dataset.keys())  
+                        generateY(original_dataset, time), 
+                            _dataset.keys(), teams= [  ['CRSDepTime', 'DayOfWeek'] ], orignal=_dataset.keys())  
         print( f"{time} : {_featuers} : {train_error}")
 
     # print( i, time)
@@ -251,7 +254,7 @@ if __name__ == "__main__" :
     _middles = Bagent.predict( _dataset , start_range , end_range)
     print(_middles)
 
-    _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=20000 )[1000:] )
+    _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=10000 )[9800:] )
     # _dataset, y = pre_proc(original_dataset, droped_fe , categorical )
     _middles = Bagent.mods[0.0].predict( _dataset )
     _middles[ _middles > 0 ] = 1
