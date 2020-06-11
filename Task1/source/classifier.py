@@ -58,26 +58,36 @@ def pre_proc_class(_dataset, categorical):
     def DynmicGeo( df, _keys ):
         import time
         import json
+        from pprint import pprint
 
-
-        Dynmic = {}
-        #Dynmic = json.loads( open("~/data/geo.txt").read().replace("'", "\"") )
+        #Dynmic = {} 
+        Dynmic = json.loads( open("geo").read().replace("'", "\"") )
         print(Dynmic)
-        for _key in _keys:
-            df[f'lat{_key}']=0
-            df[f'long{_key}']=0
-            for x in range(len(df)):
-                if df[_key][x] in Dynmic:
-                    location = Dynmic[df[_key][x]]
-                else:
-                    location = geolocator.geocode(df[_key][x])
-                    Dynmic[df[_key][x]] = location 
-                    time.sleep(2)
-                print(location , location.latitude, location.longitude)
-                df.at[x, f'lat{_key}']= location.latitude
-                df.at[x, f'long{_key}'] = location.longitude
-
-            open("~/data/geo.txt" , "a").write( Dynmic )
+        try :
+            for _key in _keys:
+                df[f'lat{_key}']=0
+                df[f'long{_key}']=0
+                for x in range(len(df)):
+                    if df[_key][x] in Dynmic:
+                        location = Dynmic[df[_key][x]]
+                        if type(location) == str:
+                            df.at[x, f'lat{_key}'] , df.at[x, f'long{_key}'] = eval(location)
+                        else:
+                            df.at[x, f'lat{_key}'] , df.at[x, f'long{_key}'] = location
+                    else:
+                        location = geolocator.geocode(df[_key][x])
+                        Dynmic[df[_key][x]] = location.latitude,  location.longitude
+                        time.sleep(2)
+                    #print(location , location.latitude, location.longitude)
+                        df.at[x, f'lat{_key}']= location.latitude
+                    df.at[x, f'long{_key}'] = location.longitude
+        except:
+            print("except")
+        for key, val in Dynmic.items():     
+            Dynmic[key] = str(val)
+        with open('geo', 'w') as f:
+            json.dump(Dynmic, f)
+        
         return df    
 
 
@@ -136,16 +146,16 @@ def pred_forest(x, y, x_test, y_test):
 
 
 def identify_corelated_features(df):
-    corr = df.corr()
-    #print(sns.heatmap(corr))
-    columns = np.full((corr.shape[0],), True, dtype=bool)
-    for i in range(corr.shape[0]):
-        for j in range(i + 1, corr.shape[0]):
-            if corr.iloc[i, j] >= 0.9:
-                if columns[j]:
-                    columns[j] = False
-    selected_columns = df.columns[columns]
-    df = df[selected_columns]
+    # corr = df.corr()
+    # #print(sns.heatmap(corr))
+    # columns = np.full((corr.shape[0],), True, dtype=bool)
+    # for i in range(corr.shape[0]):
+    #     for j in range(i + 1, corr.shape[0]):
+    #         if corr.iloc[i, j] >= 0.9:
+    #             if columns[j]:
+    #                 columns[j] = False
+    # selected_columns = df.columns[columns]
+    # df = df[selected_columns]
     return df
 
 
