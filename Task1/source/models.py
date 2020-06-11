@@ -122,7 +122,12 @@ class Logistic(abcModel):
     def __init__(self):
         super().__init__()
         self.mod = LogisticRegression(solver='liblinear')
+    
+    def fit(self, X, y):
+        super().fit(X, y.flatten())
 
+    # def predict(self, X):
+    #     return self.mod.predict(self.bias(X))
 
 class DecisionTree(abcModel):
     def __init__(self, max_depth=2):

@@ -68,7 +68,7 @@ def generateTeamClass(featuers):
         return WeakTeam
     #return generateWeakClass( DecisionTree ) 
     # return generateWeakClass( Logistic )
-    return generateWeakClass(SVM)
+    return generateWeakClass(Logistic)
 
 
 
