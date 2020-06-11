@@ -26,7 +26,7 @@ class abcModel:
         self.mod = None
 
     def fit(self, X, y):
-        self.mod.fit(self.bias(X), y)
+        self.mod.fit(self.bias(X), y.ravel())
 
     def predict(self, X):
         return self.mod.predict(self.bias(X))

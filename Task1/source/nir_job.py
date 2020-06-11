@@ -2,10 +2,11 @@ import numpy as np
 import pandas as pd
 from models import *
 import time
+from sklearn.linear_model import LinearRegression
 from strong import pre_proc, categorical, featuers, droped_fe
 
 list_classifiers = [DecisionTree, Logistic, KNearestNeighbor,
-                    RidgeClassifier, LassoClassifier]  # LDA,
+                    LinearRegression]  # LDA,
 
 
 # def calculate_classifier(data):
@@ -55,29 +56,30 @@ def calculate_classifier(data):
     # ("DayOfWeek", data5)]
     dictionary = {"CRSArrTime": [], "CRSDepTime": [], "CRSElapsedTime": [],
                   "Distance": [], "DayOfWeek": []}
-    print(X.columns)
-    for col in data_cols:
+    for col in dictionary.keys():
         for WeekLearner in list_classifiers:
-            print(X.shape)
-            print(y.shape)
+            x = np.array(X[col])
             # X = X.reshape(X.shape[0],)
             classifier = WeekLearner()
             start = time.time()
             if isinstance(classifier, Logistic):
-                classifier.fit(np.array([col[1]]).T.flatten(), y)
+                model = LogisticRegression(solver='liblinear')
+                model.fit(np.array([x]).T.reshape(-1, 1), y.flatten())
+                # classifier.fit(np.array([col[1]]).T.reshape(-1,1), y)
             else:
-                classifier.fit(np.array([col[1]]).T, y)
+                classifier.fit(np.array([x]).T, y)
             end = time.time()
             time_elapses = end - start
-            score = classifier.score(X, y)
-            dictionary[col[0]].append((WeekLearner, score, time_elapses))
+            score = classifier.score(np.array([x]).T.reshape(-1, 1), y)
+            dictionary[col].append((WeekLearner, score, time_elapses))
+    print(dictionary)
     return dictionary
 
 
 if __name__ == '__main__':
     path_csv = "../train_data.csv"
     df = pd.read_csv(path_csv)
-    df.dropna(inplace=True)
-    df = df.head(30)
+    # df.dropna(inplace=True)
+    # print(df)
+    df = df.head(1000)
     calculate_classifier(df)
-    print(df.columns)
