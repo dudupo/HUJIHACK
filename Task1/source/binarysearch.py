@@ -3,7 +3,7 @@ import numpy as np
 
 class binarysearch:
 
-    def __init__ (self, models, times_ranges):
+    def __init__ (self, models):
         self.mods = models
         self.iterations = 3
 
