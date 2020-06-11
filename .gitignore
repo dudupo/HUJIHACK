@@ -1,4 +1,6 @@
 *.svg
 *.csv 
 *.png 
-*.zip 
+*.zip
+*.txt
+*.tar

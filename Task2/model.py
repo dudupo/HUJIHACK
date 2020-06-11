@@ -85,4 +85,6 @@ if __name__ == '__main__':
     # a = create_samples()
     # print(a.shape)
     # print(a)
-    print(tokenizer())
+
+    from pprint import pprint
+    pprint(tokenizer())
