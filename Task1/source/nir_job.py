@@ -62,17 +62,16 @@ def calculate_classifier(data):
             # X = X.reshape(X.shape[0],)
             classifier = WeekLearner()
             start = time.time()
-            if isinstance(classifier, Logistic):
-                model = LogisticRegression(solver='liblinear')
-                model.fit(np.array([x]).T.reshape(-1, 1), y.flatten())
-                # classifier.fit(np.array([col[1]]).T.reshape(-1,1), y)
-            else:
-                classifier.fit(np.array([x]).T, y)
+            # if isinstance(classifier, Logistic):
+            #     model = LogisticRegression(solver='liblinear')
+            #     model.fit(np.array([x]).T.reshape(-1, 1), y.flatten())
+            #     # classifier.fit(np.array([col[1]]).T.reshape(-1,1), y)
+            # else:
+            classifier.fit(np.array([x]).T, y)
             end = time.time()
             time_elapses = end - start
             score = classifier.score(np.array([x]).T.reshape(-1, 1), y)
             dictionary[col].append((WeekLearner, score, time_elapses))
-    print(dictionary)
     return dictionary
 
 
