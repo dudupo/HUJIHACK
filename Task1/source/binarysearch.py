@@ -5,7 +5,7 @@ class binarysearch:
 
     def __init__ (self, models):
         self.mods = models
-        self.iterations = 5
+        self.iterations = 6
 
  
     '''
