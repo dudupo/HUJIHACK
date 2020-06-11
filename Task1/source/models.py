@@ -42,13 +42,13 @@ class abcModel:
 
     def score(self, X, y):
         return {
-            num_samples: 0,
-            error: 0,
-            accuracy: 0,
-            FPR: 0,
-            TPR: 0,
-            precision: 0,
-            recall: 0
+            "num_samples": 0,
+            "error" : 0,
+            "accuracy" : 0,
+            "FPR": 0,
+            "TPR": 0,
+            "precision": 0,
+            "recall": 0
         }
 
 
