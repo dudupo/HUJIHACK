@@ -46,6 +46,7 @@ from datetime import date
 #         }
 
 def generateTeamClass(featuers):
+    
     class WeakTeam(DecisionTree):
 
         def __init__(self):
