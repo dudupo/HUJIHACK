@@ -62,7 +62,7 @@ class AdaBoost(object):
         self.w = np.array(self.w)
         return D
 
-    def predict(self, X, max_t):
+    def predict(self, X, max_t=None):
         """
         Parameters
         ----------
@@ -71,11 +71,13 @@ class AdaBoost(object):
         :return: y_hat : a prediction vector for X. shape=(num_samples)
         Predict only with max_t weak learners,
         """
+        if max_t is None: 
+            max_t = self.T
         return np.sign(
                  sum(
                   self.w[i] * self.h[i].predict(X) for i in range(max_t)) )
 
-    def error(self, X, y, max_t):
+    def error(self, X, y, max_t=None):
         """
         Parameters
         ----------
@@ -84,6 +86,8 @@ class AdaBoost(object):
         :param max_t: integer < self.T: the number of classifiers to use for the classification
         :return: error : the ratio of the correct predictions when predict only with max_t weak learners (float)
         """
+        if max_t is None: 
+            max_t = self.T
         errors = sum(np.ones( len(y) )[ self.predict(X, max_t) != y ])
         return errors / len(y)
 

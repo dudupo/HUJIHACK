@@ -3,7 +3,7 @@ from adaboost import AdaBoost, AdaBoostList
 from itertools import combinations
 import numpy as np
 import pandas as pd
-
+from binarysearch import binarysearch
 from datetime import date
 # class WeakFactory:
 #     class WeakLernerByFeature(abcModel):
@@ -160,6 +160,18 @@ if __name__ == "__main__" :
     _mod = learn(_dataset, y, _dataset.keys() )
     print("[#] best featuers:")
     print(_mod.h[0].featuers)
+
+    '''
+        just to check compiletion.  
+    '''
+
+    start_range , end_range = np.zeros(len(y)) , np.ones(len(y)) 
+    Bagent = binarysearch( _mod)
+    Bagent.predict( np.array(_dataset) , start_range , end_range)
+
+
+
+
 
 
 
