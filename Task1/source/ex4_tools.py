@@ -57,7 +57,7 @@ class DecisionStump(object):
         X : samples, shape=(num_samples, num_features)
         y : labels, shape=(num_samples)
         """
-        print(f"X: {X.shape}")
+        #print(f"X: {X.shape}")
         loss_star, theta_star = np.inf, np.inf
         for sign, j in product([-1, 1], range(X.shape[1])):
             loss, theta = find_threshold(D, X, y, sign, j)

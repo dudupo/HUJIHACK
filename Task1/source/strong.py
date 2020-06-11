@@ -59,7 +59,7 @@ def generateTeamClass(featuers):
                 return ret
 
             def train(self, X, y, D=None):
-                print(f"[@] train on features : { self.featuers}")
+                #print(f"[@] train on features : { self.featuers}")
                 
                 if D is None:
                     super().fit(
@@ -86,19 +86,53 @@ def calc_error(model, _dataframe, y, agents):
     return _error / len( y ) 
 
 
-def learn(_dataframe, y, featuers ):
+import heapq
+
+def learn(_dataframe, y, featuers, teams= set(), depth = 4 ):
+
+    if len(teams) == 0:
+        teams = [  [featuer]  for  featuer in featuers  ]
+
     agents = 50
     group_size = 2
-    subgroups = [ generateTeamClass(team) for team in combinations(featuers, group_size) ]
+
+    def create_subgroups():
+        subgroups  = []
+        for featuer in featuers:
+            for team in teams:
+                if featuer not in team:
+                # if *team , featuer ) not in teams: 
+                    subgroups.append( generateTeamClass( team + [featuer] ) )
+        return subgroups
+    
 
     strongGroups = []
-    for weak in subgroups:
+    heap = [ ]
+
+    for weak in create_subgroups():
         _model = AdaBoost(weak, agents, support_wights=True)
         _model.train(_dataframe, y)
         strongGroups.append( _model )
+        heapq.heappush( heap,  (-calc_error( _model, _dataframe, y, agents ) , _model.h[0].featuers, _model  ) )
+
+        if len(heap) > 10:
+            heapq.heappop( heap )
+
+    if depth == 0:
+        while len(heap) > 1:
+            train_error, _featuers, _model =  heapq.heappop( heap )
+            #print(train_error)
+        train_error, _featuers, _model =  heapq.heappop( heap )
+        return train_error, _featuers, _model
     
-    return strongGroups[ np.argmin(
-         [  calc_error( _model, _dataframe, y, agents ) for _model in strongGroups] )]
+    else:
+        teams = []
+        while len(heap) > 1:
+            heapq.heappop( heap )
+            train_error, _featuers, _model =  heapq.heappop( heap )
+            teams.append(   ( _featuers ) )
+        #print(teams)
+        return learn(_dataframe, y, featuers, teams, depth - 1 )
 
 
 def generateY(_dataset, treshold=0):
@@ -180,9 +214,10 @@ if __name__ == "__main__" :
     _dataset, y = pre_proc(original_dataset, droped_fe + categorical, [] )
     start_range , end_range = np.zeros(len(y)) , np.ones(len(y)) * _maxrange
     for i, time in enumerate( np.arange(0, _maxrange,  _maxrange/ 2**5 ) ):
-        _mods[time] = learn(_dataset,
+        train_error, _featuers, _mods[time] = learn(_dataset,
                         generateY(original_dataset, time),
                             _dataset.keys() )  
+        print( f"{time} : {_featuers} : {train_error}")
 
     # print( i, time)
     #times_tersholds = { time : _mods[i] for i, time in enumerate( range(0, 1, 2**-4) ) }
