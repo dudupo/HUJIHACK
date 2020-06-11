@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 
 from random import random
 
+from ex4_tools import DecisionStump
+
 
 class abcModel:
 
@@ -26,7 +28,7 @@ class abcModel:
         self.mod = None
 
     def fit(self, X, y):
-        self.mod.fit(self.bias(X), y)
+        self.mod.fit(self.bias(X), y.ravel())
 
     def predict(self, X):
         return self.mod.predict(self.bias(X))
@@ -42,13 +44,13 @@ class abcModel:
 
     def score(self, X, y):
         return {
-            num_samples: 0,
-            error: 0,
-            accuracy: 0,
-            FPR: 0,
-            TPR: 0,
-            precision: 0,
-            recall: 0
+            "num_samples": 0,
+            "error" : 0,
+            "accuracy" : 0,
+            "FPR": 0,
+            "TPR": 0,
+            "precision": 0,
+            "recall": 0
         }
 
 
@@ -122,7 +124,12 @@ class Logistic(abcModel):
     def __init__(self):
         super().__init__()
         self.mod = LogisticRegression(solver='liblinear')
+    
+    def fit(self, X, y):
+        super().fit(X, y.flatten())
 
+    # def predict(self, X):
+    #     return self.mod.predict(self.bias(X))
 
 class DecisionTree(abcModel):
     def __init__(self, max_depth=2):
@@ -150,6 +157,17 @@ class LassoClassifier(abcModel):
         super().__init__()
         self.mod = Lasso(alpha=0, normalize=True)
 
+class DecisionStumpWarper(abcModel):
+    def __init__(self):
+        super().__init__()
+        self.mod = DecisionStump( )
+
+    def fit(self, X, y, D=None):
+        self.mod.fit(D, X, y.flatten())
+    
+    def predict(self, X):
+        return self.mod.predict(X)
+    
 
 def label_f(weight, bias):
     def _label_f(x):

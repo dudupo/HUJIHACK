@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 
 class AdaBoost(object):
 
-    def __init__(self, WL, T):
+    def __init__(self, WL, T , support_wights = False):
         """
         Parameters
         ----------
@@ -26,6 +26,7 @@ class AdaBoost(object):
         self.T = T
         self.h = [None]*T     # list of base learners
         self.w = np.zeros(T)  # weights
+        self.support_wights = support_wights
 
         # self._predict = np.vactorize(WL.prdeict)
 
@@ -38,12 +39,12 @@ class AdaBoost(object):
         Train this classifier over the sample (X,y)
         After finish the training return the weights of the samples in the last iteration.
         """
-
+        y = y.flatten()
         D = np.ones( len( y ) ) * 1/len( y )
 
         def find_loss_D(h, D, X, y):
-            _out = h.predict(X)
-            return np.sum( D[_out != y.transpose()[0]] ), _out
+            _out = h.predict(X).flatten()
+            return np.sum( D[_out != y.transpose()] ), _out
 
         def normalize(vec):
             r = np.sum(vec )
@@ -53,8 +54,14 @@ class AdaBoost(object):
 
         for i in range(self.T):
             self.h[i] = self.WL[i]()
-            self.h[i].train(X, y)
+            if self.support_wights:
+                self.h[i].train(X, y, D)
+            else:
+                self.h[i].train(X, y)
+                
             e_t, _out = find_loss_D(self.h[i], D, X, y)
+            # print("[%]et:")
+            # print(e_t)
             w = 0.5 * np.log( 1/e_t - 1 )
             D = normalize(D * np.e **( -w * y * _out ) )
             self.w.append(w)
@@ -62,7 +69,7 @@ class AdaBoost(object):
         self.w = np.array(self.w)
         return D
 
-    def predict(self, X, max_t):
+    def predict(self, X, max_t=None):
         """
         Parameters
         ----------
@@ -71,11 +78,13 @@ class AdaBoost(object):
         :return: y_hat : a prediction vector for X. shape=(num_samples)
         Predict only with max_t weak learners,
         """
+        if max_t is None: 
+            max_t = self.T
         return np.sign(
                  sum(
                   self.w[i] * self.h[i].predict(X) for i in range(max_t)) )
 
-    def error(self, X, y, max_t):
+    def error(self, X, y, max_t=None):
         """
         Parameters
         ----------
@@ -84,6 +93,8 @@ class AdaBoost(object):
         :param max_t: integer < self.T: the number of classifiers to use for the classification
         :return: error : the ratio of the correct predictions when predict only with max_t weak learners (float)
         """
+        if max_t is None: 
+            max_t = self.T
         errors = sum(np.ones( len(y) )[ self.predict(X, max_t) != y ])
         return errors / len(y)
 

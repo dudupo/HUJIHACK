@@ -1,10 +1,16 @@
-from models import abcModel, DecisionTree
+from models import abcModel, DecisionTree, Logistic, SVM, DecisionStumpWarper
 from adaboost import AdaBoost, AdaBoostList
 from itertools import combinations
 import numpy as np
 import pandas as pd
-
+from binarysearch import binarysearch
 from datetime import date
+from random import shuffle
+
+
+from classifier import final_pre_proc
+from sklearn.model_selection import train_test_split
+
 # class WeakFactory:
 #     class WeakLernerByFeature(abcModel):
 
@@ -46,64 +52,131 @@ from datetime import date
 #         }
 
 def generateTeamClass(featuers):
-    
-    class WeakTeam(DecisionTree):
+    def generateWeakClass(Type):
+        class WeakTeam(Type):
 
-        def __init__(self):
-            DecisionTree.__init__(self, max_depth = 3)
-            self.featuers = featuers
+            def __init__(self):
+                Type.__init__(self)
+                self.featuers = featuers
 
-        def filterX( self, X ):
-            ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
-            return ret
+            def filterX( self, X ):
+                ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
+                return ret
 
-        def train(self, X, y):
-            print(f"[@] train on features : { self.featuers}")
-            super().fit(
-                np.array(self.filterX(X)),  y)
-        def predict(self, X):
-            return super().predict( self.filterX(X) )
+            def train(self, X, y, D=None):
+                #print(f"[@] train on features : { self.featuers}")
+                
+                if D is None:
+                    super().fit(
+                        np.array(self.filterX(X)),  y)
+                else:
+                    super().fit(
+                        np.array(self.filterX(X)), y, D)
+            
+            def predict(self, X):
+                return super().predict( self.filterX(X) )
         
-    return WeakTeam
+        return WeakTeam
+    #return generateWeakClass( DecisionTree ) 
+    # return generateWeakClass( Logistic )
+
+    return generateWeakClass(DecisionStumpWarper)
 
 
+def calc_error(model, _dataframe, y, agents):
+    _error = 0
+    z = (y.flatten() - 0.5 * np.ones(len(y)))*2
+    for _bool in (model.predict(_dataframe, max_t=agents ) != z ): 
+        _error += {  False : 0 , True : 1  }[ _bool ]
+    return _error / len( y ) 
 
 
+import heapq
 
-def learn(_dataframe, y, featuers ):
-    agents = 3
-    group_size = 1
-    subgroups = [ generateTeamClass(team) for team in combinations(featuers, group_size) ]
 
-    def calc_error(model, _dataframe, y):
-        _error = 0
-        for _bool in (model.predict(_dataframe, max_t=1 ) != y).flatten(): 
-            _error += {  False : 0 , True : 1  }[ _bool ]
-        return _error / len( y ) 
+def hash_strings(featuers, _list):
+    ret = 0
+    base = 1
+    for featuer in featuers:
+        if featuer in _list:
+            ret += base
+        base*= 10
+    return ret 
 
+def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal=[] , _hased = set()):
+
+    if len(teams) == 0:
+        teams = [ [featuer] for  featuer in featuers  ]
+
+    agents = 42
+    group_size = 2
+    _hashed = set()
+    new_team = []
+    def create_subgroups():
+        subgroups  = []
+        for featuer in featuers:
+            for team in teams:
+                if featuer not in team:
+                    _hash = hash_strings(orignal, team + [featuer] ) 
+                    if _hash not in _hashed:
+                        # print(f"i was here {team + [featuer]}, _hash : {_hash}")
+                        subgroups.append( generateTeamClass( team + [featuer] ) )
+                        _hashed.add(_hash)
+        return subgroups
+    
     strongGroups = []
-    for weak in subgroups:
-        _model = AdaBoost(weak, agents)
+    heap = [ ]
+
+    for weak in create_subgroups():
+        _model = AdaBoost(weak, agents, support_wights=True)
         _model.train(_dataframe, y)
         strongGroups.append( _model )
+        heapq.heappush( heap,  (-calc_error( _model, _dataframe, y, agents ) , _model.h[0].featuers, _model  ) )
 
-    return strongGroups[ np.argmin( [  calc_error( _model, _dataframe, y ) for _model in strongGroups] )]
+        if len(heap) > 30000:
+            heapq.heappop( heap )
 
-def pre_proc(_dataset, droped_fe, categorical ):
+    if depth == 0:
+        while len(heap) > 1:
+            train_error, _featuers, _model =  heapq.heappop( heap )
+            #print(train_error)
+        train_error, _featuers, _model =  heapq.heappop( heap )
+        return train_error, _featuers, _model
+    
+    else:
+        teams = []
+        while len(heap) > 1:
+            heapq.heappop( heap )
+            train_error, _featuers, _model =  heapq.heappop( heap )
+            teams.append( _featuers  )
+        #print(teams)
+        return learn(_dataframe, y, featuers, teams, depth - 1,
+         orignal=orignal )
 
-    def generateY(_dataset):
+
+def generateY(_dataset, treshold=0):
         y = []
-        for _bool in _dataset["ArrDelay"] > 0 :
+        for _bool in _dataset["ArrDelay"] > treshold:
             y.append( {  False : [0] , True : [1]  }[ _bool ] )
         return np.array( y )
+
+def pre_proc(_dataset, droped_fe, categorical ):
 
     # def remove_end_cases(_frame):
     #     return _frame[  _frame['price'] > 0  ]
     y = generateY(_dataset)
 
-    cat = pd.DataFrame(  pd.get_dummies(_dataset[categorical].astype('category') ))
+    if len(categorical) > 0 :
+        cat = pd.DataFrame(  pd.get_dummies(_dataset[categorical].astype('category') ))
+
+
     _dataset = _dataset.drop( droped_fe + categorical, axis=1)
-    _dataset_prepoc = pd.concat([ _dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
+    if len(categorical) > 0 :
+        _dataset_prepoc = pd.concat([ _dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
+    else :
+        _dataset_prepoc = _dataset 
+
+    print(_dataset_prepoc)
     return _dataset_prepoc, y
 
 
@@ -125,6 +198,7 @@ featuers =   ["DayOfWeek",
 
 droped_fe = [ 'Flight_Number_Reporting_Airline',
               'Tail_Number',
+            #   'DayOfWeek',
               'FlightDate',
               'ArrDelay' ,
               'DelayFactor' ]
@@ -141,32 +215,52 @@ categorical = [
 
 
 if __name__ == "__main__" :
-    _dataset = pd.read_csv("~/data/train_data.csv", nrows=100)
-
-    # categorical = ['view' , 'waterfront', 'bedrooms', 'grade', 'floors', 'condition', 'bathrooms']
-    # cat = pd.DataFrame ( { 'id' : _dataset_prepoc['id'] } , pd.get_dummies(_dataset_prepoc[categorical].astype('category') ))
-    
-    
-
-
-
-
-
-            # "ArrDelay",
-            # "DelayFactor"]
+    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=7000)
 
     print("[#] before pre processing")
-    print(_dataset)
-    _dataset, y  = pre_proc(_dataset, droped_fe, categorical )
+    print(original_dataset)
+    # _dataset, y  = pre_proc(_dataset, droped_fe, categorical )
     print("[#] after pre processing")
-    print(_dataset)
     print("[#] y' vector ")
-    print(y)
     
-    print( _dataset.keys())
-    _mod = learn(_dataset, y, _dataset.keys() )
-    print("[#] best featuers:")
-    print(_mod.h[0].featuers)
+    # _mods = learn(_dataset, y, _dataset.keys() )
+    # print("[#] best featuers:")
+    # print(_mod.h[0].featuers)
+
+    '''
+        just to check compiletion.  
+    '''
+    _mods = {}  
+    _minrange, _maxrange = -30, 30
+    #_dataset, y = pre_proc(original_dataset, droped_fe , categorical )
+    _dataset, y, x_factor,y_factor = final_pre_proc(original_dataset)
+
+    print(_dataset)
+    print( y )
+
+
+
+    start_range , end_range = np.ones(len(y)) * _minrange , np.ones(len(y)) * _maxrange
+    for i, time in enumerate( np.arange(_minrange, _maxrange,  _maxrange/ 2**5 ) ):
+        train_error, _featuers, _mods[time] = learn(_dataset,
+                        generateY(original_dataset, time), 
+                            _dataset.keys(), teams= [  ['CRSDepTime', 'DayOfWeek'] ], orignal=_dataset.keys())  
+        print( f"{time} : {_featuers} : {train_error}")
+
+    # print( i, time)
+    #times_tersholds = { time : _mods[i] for i, time in enumerate( range(0, 1, 2**-4) ) }
+
+    Bagent = binarysearch( _mods ) 
+    _middles = Bagent.predict( _dataset , start_range , end_range)
+    print(_middles)
+
+    _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=10000 )[9800:] )
+    # _dataset, y = pre_proc(original_dataset, droped_fe , categorical )
+    _middles = Bagent.mods[0.0].predict( _dataset )
+    _middles[ _middles > 0 ] = 1
+    t = sum( (_middles- y.flatten())**2/len(y))
+    print (  f"[error]: {t}"  )    
+    #print( )
 
 
 
