@@ -1,4 +1,4 @@
-from models import abcModel, DecisionTree
+from models import abcModel, DecisionTree, Logistic, SVM
 from adaboost import AdaBoost, AdaBoostList
 from itertools import combinations
 import numpy as np
@@ -47,32 +47,34 @@ from random import shuffle
 #         }
 
 def generateTeamClass(featuers):
-    
-    class WeakTeam(DecisionTree):
+    def generateWeakClass(Type):
+        class WeakTeam(Type):
 
-        def __init__(self):
-            DecisionTree.__init__(self, max_depth = 3)
-            self.featuers = featuers
+            def __init__(self):
+                Type.__init__(self)
+                self.featuers = featuers
 
-        def filterX( self, X ):
-            ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
-            return ret
+            def filterX( self, X ):
+                ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
+                return ret
 
-        def train(self, X, y):
-            print(f"[@] train on features : { self.featuers}")
-            super().fit(
-                np.array(self.filterX(X)),  y)
-        def predict(self, X):
-            return super().predict( self.filterX(X) )
+            def train(self, X, y):
+                print(f"[@] train on features : { self.featuers}")
+                super().fit(
+                    np.array(self.filterX(X)),  y)
+            def predict(self, X):
+                return super().predict( self.filterX(X) )
         
-    return WeakTeam
-
+        return WeakTeam
+    #return generateWeakClass( DecisionTree ) 
+    # return generateWeakClass( Logistic )
+    return generateWeakClass(Logistic)
 
 
 
 
 def learn(_dataframe, y, featuers ):
-    agents = 3
+    agents = 2
     group_size = 1
     subgroups = [ generateTeamClass(team) for team in combinations(featuers, group_size) ]
 
@@ -88,16 +90,16 @@ def learn(_dataframe, y, featuers ):
         _model.train(_dataframe, y)
         strongGroups.append( _model )
     
-    return strongGroups
-    #return strongGroups[ np.argmin( [  calc_error( _model, _dataframe, y ) for _model in strongGroups] )]
+    return strongGroups[ np.argmin( [  calc_error( _model, _dataframe, y ) for _model in strongGroups] )]
 
-def pre_proc(_dataset, droped_fe, categorical ):
 
-    def generateY(_dataset):
+def generateY(_dataset, treshold=0):
         y = []
-        for _bool in _dataset["ArrDelay"] > 0 :
+        for _bool in _dataset["ArrDelay"] > treshold:
             y.append( {  False : [0] , True : [1]  }[ _bool ] )
         return np.array( y )
+
+def pre_proc(_dataset, droped_fe, categorical ):
 
     # def remove_end_cases(_frame):
     #     return _frame[  _frame['price'] > 0  ]
@@ -143,46 +145,36 @@ categorical = [
 
 
 if __name__ == "__main__" :
-    _dataset = pd.read_csv("~/data/train_data.csv", nrows=100)
-
-    # categorical = ['view' , 'waterfront', 'bedrooms', 'grade', 'floors', 'condition', 'bathrooms']
-    # cat = pd.DataFrame ( { 'id' : _dataset_prepoc['id'] } , pd.get_dummies(_dataset_prepoc[categorical].astype('category') ))
-    
-    
-
-
-
-
-
-            # "ArrDelay",
-            # "DelayFactor"]
+    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=100)
 
     print("[#] before pre processing")
-    print(_dataset)
-    _dataset, y  = pre_proc(_dataset, droped_fe, categorical )
+    print(original_dataset)
+    # _dataset, y  = pre_proc(_dataset, droped_fe, categorical )
     print("[#] after pre processing")
-    print(_dataset)
     print("[#] y' vector ")
-    print(y)
     
-    print( _dataset.keys())
-    _mods = learn(_dataset, y, _dataset.keys() )
+    # _mods = learn(_dataset, y, _dataset.keys() )
     # print("[#] best featuers:")
     # print(_mod.h[0].featuers)
 
     '''
         just to check compiletion.  
     '''
-    _mods =  shuffle( _mods )
-    start_range , end_range = np.zeros(len(y)) , np.ones(len(y)) 
-    
-    for i, time in enumerate( np.arange(0, 1, 2**-4) ):
-        print( i, time)
-    # times_tersholds = { time : _mods[i] for i, time in enumerate( range(0, 1, 2**-4) ) }
-    # Bagent = binarysearch( _mods, times_tersholds ) 
-    # _middles = Bagent.predict( _dataset , start_range , end_range)
+    _mods = {}  
+    _maxrange = 30
+    _dataset, y = pre_proc(original_dataset, droped_fe + categorical, ['DayOfWeek'] )
+    start_range , end_range = np.zeros(len(y)) , np.ones(len(y)) * _maxrange
+    for i, time in enumerate( np.arange(0, _maxrange,  _maxrange/ 2**4 ) ):
+        _mods[time] = learn(_dataset,
+                        generateY(original_dataset, time),
+                            _dataset.keys() )  
 
-    # print(_middles)
+    # print( i, time)
+    #times_tersholds = { time : _mods[i] for i, time in enumerate( range(0, 1, 2**-4) ) }
+
+    Bagent = binarysearch( _mods ) 
+    _middles = Bagent.predict( _dataset , start_range , end_range)
+    print(_middles)
 
 
 
