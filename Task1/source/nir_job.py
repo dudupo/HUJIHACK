@@ -4,9 +4,8 @@ from models import *
 import time
 from strong import pre_proc, categorical, featuers, droped_fe
 
-
-list_classifiers = [ Logistic, DecisionTree, KNearestNeighbor,
-                    RidgeClassifier, LassoClassifier] # LDA,
+list_classifiers = [Logistic, DecisionTree, KNearestNeighbor,
+                    RidgeClassifier, LassoClassifier]  # LDA,
 
 
 def calculate_classifier(data):
@@ -22,8 +21,7 @@ def calculate_classifier(data):
     dictionary = {"CRSArrTime": [], "CRSDepTime": [], "CRSElapsedTime": [],
                   "Distance": [], "DayOfWeek": []}
 
-
-    X, y = pre_proc(data ,droped_fe, categorical )
+    X, y = pre_proc(data, droped_fe, categorical)
     for col in data_cols:
         for WeekLearner in list_classifiers:
             # X = col[1]
@@ -45,5 +43,5 @@ if __name__ == '__main__':
     path_csv = "../train_data.csv"
     df = pd.read_csv(path_csv)
     df.dropna(inplace=True)
+    df = df.head(30)
     calculate_classifier(df)
-    print(df.columns)
