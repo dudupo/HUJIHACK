@@ -3,9 +3,9 @@ import numpy as np
 
 class binarysearch:
 
-    def __init__ (self, model):
-        self.mod = model
-        self.iterations = 10
+    def __init__ (self, models, times_ranges):
+        self.mods = models
+        self.iterations = 3
 
     def get_model(self, times_delay):
         return self.mod
@@ -14,8 +14,13 @@ class binarysearch:
          for _bool in re > middle ] )
                 y = np.array( [ {  False : [0] , True : [1]  }[ _bool ]
     '''
+    # def load_classifers(self, classifers_steps):
+        
+    #     pass
+    
+    
     def _predict(self, X, treshold):
-        return self.mod.predict(X)
+        return self.mods[treshold].predict(X)
 
     def predict(self, X, start_range, end_range):
 
@@ -23,7 +28,8 @@ class binarysearch:
         for j in range(self.iterations):
             middle =(start_range + end_range)/2
             res = self._predict(X , start_range ).flatten()
-            start_range, end_range = middle * res  ,  middle + middle * res
+            print(res)
+            start_range, end_range = (1 - res) * start_range + res * middle  , (1 - res) * middle +  res * end_range
         return middle
 
 

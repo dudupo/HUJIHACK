@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from binarysearch import binarysearch
 from datetime import date
+from random import shuffle
 # class WeakFactory:
 #     class WeakLernerByFeature(abcModel):
 
@@ -86,8 +87,9 @@ def learn(_dataframe, y, featuers ):
         _model = AdaBoost(weak, agents)
         _model.train(_dataframe, y)
         strongGroups.append( _model )
-
-    return strongGroups[ np.argmin( [  calc_error( _model, _dataframe, y ) for _model in strongGroups] )]
+    
+    return strongGroups
+    #return strongGroups[ np.argmin( [  calc_error( _model, _dataframe, y ) for _model in strongGroups] )]
 
 def pre_proc(_dataset, droped_fe, categorical ):
 
@@ -164,18 +166,23 @@ if __name__ == "__main__" :
     print(y)
     
     print( _dataset.keys())
-    _mod = learn(_dataset, y, _dataset.keys() )
-    print("[#] best featuers:")
-    print(_mod.h[0].featuers)
+    _mods = learn(_dataset, y, _dataset.keys() )
+    # print("[#] best featuers:")
+    # print(_mod.h[0].featuers)
 
     '''
         just to check compiletion.  
     '''
-
+    _mods =  shuffle( _mods )
     start_range , end_range = np.zeros(len(y)) , np.ones(len(y)) 
-    Bagent = binarysearch( _mod)
-    Bagent.predict( np.array(_dataset) , start_range , end_range)
+    
+    for i, time in enumerate( np.arange(0, 1, 2**-4) ):
+        print( i, time)
+    # times_tersholds = { time : _mods[i] for i, time in enumerate( range(0, 1, 2**-4) ) }
+    # Bagent = binarysearch( _mods, times_tersholds ) 
+    # _middles = Bagent.predict( _dataset , start_range , end_range)
 
+    # print(_middles)
 
 
 
