@@ -57,7 +57,6 @@ class AdaBoost(object):
             e_t, _out = find_loss_D(self.h[i], D, X, y)
             w = 0.5 * np.log( 1/e_t - 1 )
             D = normalize(D * np.e **( -w * y * _out ) )
-            print(f"[@]{D}")
             self.w.append(w)
 
         self.w = np.array(self.w)

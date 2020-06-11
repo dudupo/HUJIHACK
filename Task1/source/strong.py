@@ -57,6 +57,7 @@ def generateTeamClass(featuers):
             return ret
 
         def train(self, X, y):
+            print(f"[@] train on features : { self.featuers}")
             super().fit(
                 np.array(self.filterX(X)),  y)
         def predict(self, X):
@@ -70,12 +71,12 @@ def generateTeamClass(featuers):
 
 def learn(_dataframe, y, featuers ):
     agents = 3
-    group_size = 2
+    group_size = 1
     subgroups = [ generateTeamClass(team) for team in combinations(featuers, group_size) ]
 
     def calc_error(model, _dataframe, y):
         _error = 0
-        for _bool in model.predict(_dataframe) != y: 
+        for _bool in (model.predict(_dataframe, max_t=1 ) != y).flatten(): 
             _error += {  False : 0 , True : 1  }[ _bool ]
         return _error / len( y ) 
 
@@ -157,7 +158,7 @@ if __name__ == "__main__" :
     print( _dataset.keys())
     _mod = learn(_dataset, y, _dataset.keys() )
     print("[#] best featuers:")
-    print(_mod.featuers)
+    print(_mod.h[0].featuers)
 
 
 
