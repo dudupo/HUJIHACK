@@ -132,7 +132,7 @@ def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal= [] , _hased
         strongGroups.append( _model )
         heapq.heappush( heap,  (-calc_error( _model, _dataframe, y, agents ) , _model.h[0].featuers, _model  ) )
 
-        if len(heap) > 300:
+        if len(heap) > 300000:
             heapq.heappop( heap )
 
     if depth == 0:
