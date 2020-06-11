@@ -5,6 +5,7 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import Lasso, Ridge
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import \
@@ -134,6 +135,20 @@ class KNearestNeighbor(abcModel):
     def __init__(self):
         super().__init__()
         self.mod = KNeighborsClassifier(n_neighbors=40)
+
+
+class RidgeClassifier(abcModel):
+
+    def __init__(self):
+        super().__init__()
+        self.mod = Ridge(alpha=0, normalize=True)
+
+
+class LassoClassifier(abcModel):
+
+    def __init__(self):
+        super().__init__()
+        self.mod = Lasso(alpha=0, normalize=True)
 
 
 def label_f(weight, bias):

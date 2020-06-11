@@ -86,7 +86,58 @@ def learn(_dataframe, y, featuers ):
         _model.train(_dataframe, y)
         strongGroups.append( _model )
 
-    return strongGroups[ np.argmin( [  calc_error( _model, _dataframe, y ) for _model in strongGroups] )] 
+    return strongGroups[ np.argmin( [  calc_error( _model, _dataframe, y ) for _model in strongGroups] )]
+
+def pre_proc(_dataset, droped_fe, categorical ):
+
+    def generateY(_dataset):
+        y = []
+        for _bool in _dataset["ArrDelay"] > 0 :
+            y.append( {  False : [0] , True : [1]  }[ _bool ] )
+        return np.array( y )
+
+    # def remove_end_cases(_frame):
+    #     return _frame[  _frame['price'] > 0  ]
+    y = generateY(_dataset)
+
+    cat = pd.DataFrame(  pd.get_dummies(_dataset[categorical].astype('category') ))
+    _dataset = _dataset.drop( droped_fe + categorical, axis=1)
+    _dataset_prepoc = pd.concat([ _dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
+    return _dataset_prepoc, y
+
+
+featuers =   ["DayOfWeek",
+              "FlightDate",
+              "Reporting_Airline",
+              "Tail_Number",
+              "Flight_Number_Reporting_Airline",
+              "Origin",
+              "OriginCityName",
+              "OriginState",
+              "Dest",
+              "DestCityName",
+              "DestState",
+              "CRSDepTime",
+              "CRSArrTime",
+              "CRSElapsedTime",
+              "Distance"]
+
+droped_fe = [ 'Flight_Number_Reporting_Airline',
+              'Tail_Number',
+              'FlightDate',
+              'ArrDelay' ,
+              'DelayFactor' ]
+
+categorical = [
+    'OriginCityName'
+    , 'OriginState'
+    , 'Origin'
+    , 'Dest'
+    , 'DestCityName'
+    , 'DestState'
+    , 'Reporting_Airline']
+
+
 
 if __name__ == "__main__" :
     _dataset = pd.read_csv("~/data/train_data.csv", nrows=100)
@@ -95,54 +146,10 @@ if __name__ == "__main__" :
     # cat = pd.DataFrame ( { 'id' : _dataset_prepoc['id'] } , pd.get_dummies(_dataset_prepoc[categorical].astype('category') ))
     
     
-    def pre_proc(_dataset, droped_fe, categorical ):
-
-        def generateY(_dataset):
-            y = []
-            for _bool in _dataset["ArrDelay"] > 0 :
-                y.append( {  False : [0] , True : [1]  }[ _bool ] )
-            return np.array( y )
-
-        # def remove_end_cases(_frame):
-        #     return _frame[  _frame['price'] > 0  ]
-        y = generateY(_dataset) 
-        
-        cat = pd.DataFrame(  pd.get_dummies(_dataset[categorical].astype('category') ))
-        _dataset = _dataset.drop( droped_fe + categorical, axis=1)
-        _dataset_prepoc = pd.concat([ _dataset.reset_index(drop=True), cat.reset_index(drop=True)], axis=1)
-        return _dataset_prepoc, y
 
 
-    featuers =   ["DayOfWeek",
-            "FlightDate",
-            "Reporting_Airline",
-            "Tail_Number",
-            "Flight_Number_Reporting_Airline",
-            "Origin",
-            "OriginCityName",
-            "OriginState",
-            "Dest",
-            "DestCityName",
-            "DestState",
-            "CRSDepTime",
-            "CRSArrTime",
-            "CRSElapsedTime",
-            "Distance"]
-    
-    droped_fe = [ 'Flight_Number_Reporting_Airline',
-                 'Tail_Number',
-                 'FlightDate',
-                 'ArrDelay' ,
-                 'DelayFactor' ]
-    
-    categorical = [
-        'OriginCityName' 
-        , 'OriginState'
-        , 'Origin'
-        , 'Dest'
-        , 'DestCityName'
-        , 'DestState'
-        , 'Reporting_Airline']
+
+
 
             # "ArrDelay",
             # "DelayFactor"]
