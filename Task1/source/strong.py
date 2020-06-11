@@ -1,4 +1,4 @@
-from models import abcModel, DecisionTree
+from models import abcModel, DecisionTree, Logistic, SVM
 from adaboost import AdaBoost, AdaBoostList
 from itertools import combinations
 import numpy as np
@@ -47,32 +47,34 @@ from random import shuffle
 #         }
 
 def generateTeamClass(featuers):
-    
-    class WeakTeam(DecisionTree):
+    def generateWeakClass(Type):
+        class WeakTeam(Type):
 
-        def __init__(self):
-            DecisionTree.__init__(self, max_depth = 3)
-            self.featuers = featuers
+            def __init__(self):
+                Type.__init__(self)
+                self.featuers = featuers
 
-        def filterX( self, X ):
-            ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
-            return ret
+            def filterX( self, X ):
+                ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
+                return ret
 
-        def train(self, X, y):
-            print(f"[@] train on features : { self.featuers}")
-            super().fit(
-                np.array(self.filterX(X)),  y)
-        def predict(self, X):
-            return super().predict( self.filterX(X) )
+            def train(self, X, y):
+                print(f"[@] train on features : { self.featuers}")
+                super().fit(
+                    np.array(self.filterX(X)),  y)
+            def predict(self, X):
+                return super().predict( self.filterX(X) )
         
-    return WeakTeam
-
+        return WeakTeam
+    #return generateWeakClass( DecisionTree ) 
+    # return generateWeakClass( Logistic )
+    return generateWeakClass(SVM)
 
 
 
 
 def learn(_dataframe, y, featuers ):
-    agents = 3
+    agents = 2
     group_size = 1
     subgroups = [ generateTeamClass(team) for team in combinations(featuers, group_size) ]
 
@@ -159,16 +161,17 @@ if __name__ == "__main__" :
         just to check compiletion.  
     '''
     _mods = {}  
+    _maxrange = 30
     _dataset, y = pre_proc(original_dataset, droped_fe + categorical, ['DayOfWeek'] )
-    start_range , end_range = np.zeros(len(y)) , np.ones(len(y)) 
-    for i, time in enumerate( np.arange(0, 1, 2**-4) ):
+    start_range , end_range = np.zeros(len(y)) , np.ones(len(y)) * _maxrange
+    for i, time in enumerate( np.arange(0, _maxrange,  _maxrange/ 2**4 ) ):
         _mods[time] = learn(_dataset,
                         generateY(original_dataset, time),
                             _dataset.keys() )  
 
     # print( i, time)
     #times_tersholds = { time : _mods[i] for i, time in enumerate( range(0, 1, 2**-4) ) }
-    
+
     Bagent = binarysearch( _mods ) 
     _middles = Bagent.predict( _dataset , start_range , end_range)
     print(_middles)

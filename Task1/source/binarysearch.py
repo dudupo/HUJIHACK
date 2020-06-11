@@ -19,16 +19,17 @@ class binarysearch:
     #     pass
     
     
-    def _predict(self, X, treshold):
-        return self.mods[treshold].predict(X)
+    def _predict(self, x, treshold):
+        return self.mods[treshold].predict(x)  
 
     def predict(self, X, start_range, end_range):
-
         times_delay = 0
         for j in range(self.iterations):
             middle =(start_range + end_range)/2
-            res = self._predict(X , start_range ).flatten()
-            print(res)
+            res = np.zeros( shape = start_range.shape)
+            for i, time in enumerate(start_range):
+                res[i] = self._predict(X.iloc[[i]] , start_range[i])[0]
+            
             start_range, end_range = (1 - res) * start_range + res * middle  , (1 - res) * middle +  res * end_range
         return middle
 
