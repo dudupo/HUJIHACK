@@ -6,6 +6,7 @@ import pandas as pd
 from binarysearch import binarysearch
 from datetime import date
 from random import shuffle
+import pickle
 
 
 from classifier import final_pre_proc
@@ -108,7 +109,7 @@ def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal=[] , _hased 
     if len(teams) == 0:
         teams = [ [featuer] for  featuer in featuers  ]
 
-    agents = 100
+    agents = 20
     _hashed = set()
     new_team = []
     def create_subgroups():
@@ -208,7 +209,7 @@ categorical = [
 
 
 if __name__ == "__main__" :
-    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=7000)
+    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=80)
 
     print("[#] before pre processing")
     print(original_dataset)
@@ -230,12 +231,13 @@ if __name__ == "__main__" :
     _middles = Bagent.predict( _dataset , start_range , end_range)
     print(_middles)
 
-    _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=10000 )[9800:] )
-    _middles = Bagent.mods[0.0].predict( _dataset )
-    _middles[ _middles > 0 ] = 1
-    t = sum( (_middles- y.flatten())**2/len(y))
-    print (  f"[error]: {t}"  )    
-
+    # _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=10000 )[9800:] )
+    # _middles = Bagent.mods[0.0].predict( _dataset )
+    # _middles[ _middles > 0 ] = 1
+    # t = sum( (_middles- y.flatten())**2/len(y))
+    # print (  f"[error]: {t}"  )  
+    with open("./BinAgent") as f:
+        pickle.dump(f, Bagent)
 
 
 
