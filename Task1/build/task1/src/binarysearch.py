@@ -6,7 +6,7 @@ class binarysearch:
 
     def __init__ (self, models):
         self.mods = models
-        self.iterations = 4
+        self.iterations = 6
 
  
     '''
@@ -40,7 +40,11 @@ class binarysearch:
             
             _file.write(_str)
 
-
+def binarysearch_read(_file):
+    mods = {}
+    for banch in re.split('$', _file.read()):
+        treshold, _strmod = re.split(':', banch)
+        mods[float(treshold)] = AdaBoost_read( )
 
 
 
