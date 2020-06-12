@@ -6,6 +6,7 @@ import pandas as pd
 from binarysearch import binarysearch
 from datetime import date
 from random import shuffle
+import pickle
 
 from classifier import final_pre_proc
 from sklearn.model_selection import train_test_split
@@ -111,8 +112,7 @@ def learn(_dataframe, y, featuers, teams=set(), depth=5, orignal=[],
     if len(teams) == 0:
         teams = [[featuer] for featuer in featuers]
 
-    agents = 42
-    group_size = 2
+    agents = 20
     _hashed = set()
     new_team = []
 
@@ -125,6 +125,7 @@ def learn(_dataframe, y, featuers, teams=set(), depth=5, orignal=[],
                     if _hash not in _hashed:
                         # print(f"i was here {team + [featuer]}, _hash : {_hash}")
                         subgroups.append(generateTeamClass(team + [featuer]))
+1
                         _hashed.add(_hash)
         return subgroups
 
@@ -139,23 +140,23 @@ def learn(_dataframe, y, featuers, teams=set(), depth=5, orignal=[],
             -calc_error(_model, _dataframe, y, agents), _model.h[0].featuers,
             _model))
 
-        if len(heap) > 30000:
-            heapq.heappop(heap)
+
+        if len(heap) > 3:
+            heapq.heappop( heap )
 
     if depth == 0:
         while len(heap) > 1:
-            train_error, _featuers, _model = heapq.heappop(heap)
-            # print(train_error)
-        train_error, _featuers, _model = heapq.heappop(heap)
+            train_error, _featuers, _model =  heapq.heappop( heap )
+        train_error, _featuers, _model =  heapq.heappop( heap )
         return train_error, _featuers, _model
 
     else:
         teams = []
         while len(heap) > 1:
-            heapq.heappop(heap)
-            train_error, _featuers, _model = heapq.heappop(heap)
-            teams.append(_featuers)
-        # print(teams)
+
+            heapq.heappop( heap )
+            train_error, _featuers, _model =  heapq.heappop( heap )
+            teams.append( _featuers  )
         return learn(_dataframe, y, featuers, teams, depth - 1,
                      orignal=orignal)
 
@@ -225,9 +226,9 @@ def pairs():
     return [classifier1, classifier2, classifier3, classifier4, classifier5, classifier6]
 
 
-def pre_proc(_dataset, droped_fe, categorical):
-    # def remove_end_cases(_frame):
-    #     return _frame[  _frame['price'] > 0  ]
+
+
+def pre_proc(_dataset, droped_fe, categorical ):
     y = generateY(_dataset)
 
     if len(categorical) > 0:
@@ -278,32 +279,16 @@ categorical = [
     , 'DestState'
     , 'Reporting_Airline']
 
-if __name__ == "__main__":
-    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=7000)
+
+
+if __name__ == "__main__" :
+    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=80)
 
     print("[#] before pre processing")
     print(original_dataset)
-    # _dataset, y  = pre_proc(_dataset, droped_fe, categorical )
-    print("[#] after pre processing")
-    print("[#] y' vector ")
-
-    # _mods = learn(_dataset, y, _dataset.keys() )
-    # print("[#] best featuers:")
-    # print(_mod.h[0].featuers)
-
-    '''
-        just to check compiletion.  
-    '''
-    _mods = {}
+    _mods = {}  
     _minrange, _maxrange = -30, 30
-    # _dataset, y = pre_proc(original_dataset, droped_fe , categorical )
-    _dataset, y, x_factor, y_factor = final_pre_proc(original_dataset)
-
-    print(_dataset)
-    print(y)
-
-    print("-------------------------------------------------------")
-    print(y)
+    _dataset, y, x_factor,y_factor = final_pre_proc(original_dataset)
 
     df_copy = _dataset.copy()
     df_copy["DelayFactor"] = y_factor
@@ -335,6 +320,17 @@ if __name__ == "__main__":
     t = sum((_middles - y.flatten()) ** 2 / len(y))
     print(f"[error]: {t}")
     # print( )
+
+    # _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=10000 )[9800:] )
+    # _middles = Bagent.mods[0.0].predict( _dataset )
+    # _middles[ _middles > 0 ] = 1
+    # t = sum( (_middles- y.flatten())**2/len(y))
+    # print (  f"[error]: {t}"  )  
+    with open("./BinAgent") as f:
+        pickle.dump(f, Bagent)
+
+
+
 
 # class StrongClassifer:
 
