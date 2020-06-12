@@ -26,6 +26,7 @@ def find_threshold(D, X, y, sign, j):
     """
     # sort the data so that x1 <= x2 <= ... <= xm
     sort_idx = np.argsort(X[:, j])
+ 
     X, y, D = X[sort_idx], y[sort_idx], D[sort_idx]
 
 

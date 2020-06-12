@@ -8,7 +8,7 @@ from binarysearch import binarysearch
 from datetime import date
 from random import shuffle
 from sklearn.model_selection import train_test_split
-from geopy.geocoders import Nominatim, ArcGIS
+# from geopy.geocoders import Nominatim, ArcGIS
 import json
 import math
 factor_reason = {'CarrierDelay': 0, 'WeatherDelay': 1, 'NASDelay': 2, 'LateAircraftDelay': 3}
@@ -55,7 +55,7 @@ def pre_proc_class(_dataset, categorical):
     _dataset['day'] = pd.DatetimeIndex(_dataset['FlightDate']).day
     _dataset['year'] = pd.DatetimeIndex(_dataset['FlightDate']).year
         
-    proc_weather( _dataset )
+    #proc_weather( _dataset )
 
     for index, row in _dataset.iterrows():
         # _dataset.loc[index, 'CRSElapsedTime'] = math.floor(row['CRSElapsedTime'] / 10)
@@ -64,9 +64,9 @@ def pre_proc_class(_dataset, categorical):
         _dataset.loc[index, 'Distance'] = math.floor(row['Distance'] / 10)
 
 
-    geolocator = ArcGIS(username="david.ponarovsky", password="mxSrWYYdSq++J7+",
-     referer="efMmfQrfh1o_Ag-MEzx5-en9lLs-m_Vu5T_JU7K45vfUhjEccY6W2cilzPnn2r9TO7fpPnAeK_U8EWptaUiXOC7FosOKaovLPAXQR06PGnXrUYBRiN6RMJA8g6JoANpO5LM080ti3FTpMVgDsJ3Psg..",
-     timeout=500000)
+    # geolocator = ArcGIS(username="david.ponarovsky", password="mxSrWYYdSq++J7+",
+    #  referer="efMmfQrfh1o_Ag-MEzx5-en9lLs-m_Vu5T_JU7K45vfUhjEccY6W2cilzPnn2r9TO7fpPnAeK_U8EWptaUiXOC7FosOKaovLPAXQR06PGnXrUYBRiN6RMJA8g6JoANpO5LM080ti3FTpMVgDsJ3Psg..",
+    #  timeout=500000)
 
     def DynmicGeo( df, _keys ):
         import time
@@ -85,13 +85,13 @@ def pre_proc_class(_dataset, categorical):
                             df.at[x, f'lat{_key}'] , df.at[x, f'long{_key}'] = eval(location)
                         else:
                             df.at[x, f'lat{_key}'] , df.at[x, f'long{_key}'] = location
-                    else:
-                        location = geolocator.geocode(df[_key][x])
-                        Dynmic[df[_key][x]] = location.latitude,  location.longitude
-                        # time.sleep(2)
-                    #print(location , location.latitude, location.longitude)
-                        df.at[x, f'lat{_key}']= location.latitude
-                        df.at[x, f'long{_key}'] = location.longitude
+                    # else:
+                    #     location = geolocator.geocode(df[_key][x])
+                    #     Dynmic[df[_key][x]] = location.latitude,  location.longitude
+                    #     # time.sleep(2)
+                    # #print(location , location.latitude, location.longitude)
+                    #     df.at[x, f'lat{_key}']= location.latitude
+                    #     df.at[x, f'long{_key}'] = location.longitude
         except:
             print("except")
         
@@ -229,9 +229,14 @@ droped_fe_delay = ['Flight_Number_Reporting_Airline',
                    "OriginCityName",
                    "OriginState",
                    "DestCityName",
-                   "DestState", 'FlightDate', "CRSElapsedTime", 'ArrDelay', 'DelayFactor', 'Origin', 'Dest' ]
+                   "DestState", 'FlightDate', "CRSElapsedTime", 'ArrDelay', 'DelayFactor', 'Origin', 'Dest', 'Reporting_Airline' ]
 
-categorical_new = ['Reporting_Airline']
+categorical_new = [] #['Reporting_Airline']
+
+
+
+def final_pre_proc_test(_dataset):
+    return pre_proc_class(_dataset, categorical_new)
 
 def final_pre_proc(_dataset):
     x = pre_proc_class(_dataset, categorical_new)

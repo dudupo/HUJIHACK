@@ -10,7 +10,7 @@ Author(s):
 
 import pandas as pd
 import pickle
-from classifier import final_pre_proc
+from classifier import final_pre_proc_test
 from strong  import WeakTeam 
 from binarysearch import binarysearch
 from adaboost import AdaBoost 
@@ -33,5 +33,10 @@ class FlightPredictor:
         @return: A pandas DataFrame with shape (m, 2) with your prediction
         """
 
-        _dataset, y, x_factor,y_factor = final_pre_proc(x)
-        self.mod.predict(x)
+        _dataset = final_pre_proc_test(x)
+        _late_data_set = self.mod.predict(x)  
+        
+        #middles = self.mod.predict(x) 
+
+
+

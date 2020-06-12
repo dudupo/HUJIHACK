@@ -8,54 +8,10 @@ from datetime import date
 from random import shuffle
 import pickle
 
-from classifier import final_pre_proc
+from classifier import final_pre_proc, final_pre_proc_test
 from sklearn.model_selection import train_test_split
 
 
-# class WeakFactory:
-#     class WeakLernerByFeature(abcModel):
-
-#         def __init__(self, _model):
-#             self.mod = _model
-
-#         def fit(self, X, y):
-#             self.mod.fit(X,y)
-
-#         def predict(self, X):
-#             return self.mod.predict()
-
-
-#     def __init__ (self):
-#         pass
-
-#     @staticmethod
-#     def CreateWeaks(self):
-
-#         return { 
-
-#                 "DayOfWeek" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "FlightDate" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "Reporting_Airline" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "Tail_Number" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "Flight_Number_Reporting_Airline" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "Origin" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "OriginCityName" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "OriginState" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "Dest" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "DestCityName" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "DestState" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "CRSDepTime" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "CRSArrTime" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "CRSElapsedTime" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "Distance" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "ArrDelay" : WeakFactory ( DecisionTree(max_depth=2) ),
-#                 "DelayFacto" : WeakFactory ( DecisionTree(max_depth=2) )
-
-        
-    #return generateWeakClass( DecisionTree ) 
-    # return generateWeakClass( Logistic )
-
-# " extracrd out for pickiling "
 class WeakTeam(DecisionStumpWarper):
 
     def __init__(self, featuers=True):
@@ -83,16 +39,6 @@ def generateTeamClass(featuers):
     return (WeakTeam, featuers)
 
 
-# 
-
-
-# def binarysearch_read(_file):
-#     mods = {}
-#     for banch in re.split('$', _file.read()):
-#         treshold, _strmod = re.split(':', banch)
-#         mods[float(treshold)] = AdaBoost_read(banch)
-
-
 def calc_error(model, _dataframe, y, agents):
     _error = 0
     z = (y.flatten() - 0.5 * np.ones(len(y))) * 2
@@ -114,12 +60,12 @@ def hash_strings(featuers, _list):
     return ret
 
 
-def learn(_dataframe, y, featuers, teams=set(), depth=5, orignal=[],
-          _hased=set()):
+def learn(_dataframe, y, featuers, teams=set(), depth=4, orignal=[],
+          _hased=set(),):
     if len(teams) == 0:
         teams = [[featuer] for featuer in featuers]
 
-    agents = 1
+    agents = 12
     _hashed = set()
     new_team = []
 
@@ -130,7 +76,6 @@ def learn(_dataframe, y, featuers, teams=set(), depth=5, orignal=[],
                 if featuer not in team:
                     _hash = hash_strings(orignal, team + [featuer])
                     if _hash not in _hashed:
-                        # print(f"i was here {team + [featuer]}, _hash : {_hash}")
                         subgroups.append(generateTeamClass(team + [featuer]))
                         _hashed.add(_hash)
         return subgroups
@@ -271,7 +216,6 @@ featuers = ["DayOfWeek",
 
 droped_fe = ['Flight_Number_Reporting_Airline',
              'Tail_Number',
-             #   'DayOfWeek',
              'FlightDate',
              'ArrDelay',
              'DelayFactor']
@@ -288,7 +232,7 @@ categorical = [
 
 
 if __name__ == "__main__" :
-    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=80)
+    original_dataset = pd.read_csv("~/data/train_data.csv", nrows=200)
 
     print("[#] before pre processing")
     print(original_dataset)
@@ -296,30 +240,32 @@ if __name__ == "__main__" :
     _minrange, _maxrange = -30, 30
     _dataset, y, x_factor,y_factor = final_pre_proc(original_dataset)
 
-    df_copy = _dataset.copy()
-    df_copy["DelayFactor"] = y_factor
-    pairs()
+    # df_copy = _dataset.copy()
+    # df_copy["DelayFactor"] = y_factor
+    # pairs()
+
+    print( _dataset)
 
     start_range , end_range = np.ones(len(y)) * _minrange , np.ones(len(y)) * _maxrange
-    for i, time in enumerate( np.arange(_minrange, _maxrange,  (_maxrange-_minrange)/ 2 ) ):
+    for i, time in enumerate( np.arange(_minrange, _maxrange,  (_maxrange-_minrange)/ 32 ) ):
         train_error, _featuers, _mods[time] = learn(_dataset,
                                                     generateY(original_dataset,
                                                               time),
-                                                    _dataset.keys(), teams=[
-                ['CRSDepTime', 'DayOfWeek']], orignal=_dataset.keys())
+                                                    _dataset.keys(),  orignal=_dataset.keys())
         print(f"{time} : {_featuers} : {train_error}")
 
     Bagent = binarysearch( _mods ) 
     # _middles = Bagent.predict( _dataset , start_range , end_range)
     # print(_middles)
 
-    _dataset, y, x_factor, y_factor = final_pre_proc(
-        pd.read_csv("~/data/train_data.csv", nrows=10000)[9800:])
+    # _dataset, y, x_factor, y_factor = final_pre_proc(
+    #     pd.read_csv("~/data/train_data.csv", nrows=10000)[9800:])
+    
     # _dataset, y = pre_proc(original_dataset, droped_fe , categorical )
-    _middles = Bagent.mods[0.0].predict(_dataset)
-    _middles[_middles > 0] = 1
-    t = sum((_middles - y.flatten()) ** 2 / len(y))
-    print(f"[error]: {t}")
+    # _middles = Bagent.mods[0.0].predict(_dataset)
+    # _middles[_middles > 0] = 1
+    # t = sum((_middles - y.flatten()) ** 2 / len(y))
+    # print(f"[error]: {t}")
     # print( )
 
     # _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=10000 )[9800:] )
