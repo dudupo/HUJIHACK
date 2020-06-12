@@ -125,7 +125,6 @@ def learn(_dataframe, y, featuers, teams=set(), depth=5, orignal=[],
                     if _hash not in _hashed:
                         # print(f"i was here {team + [featuer]}, _hash : {_hash}")
                         subgroups.append(generateTeamClass(team + [featuer]))
-1
                         _hashed.add(_hash)
         return subgroups
 
