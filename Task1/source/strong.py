@@ -178,18 +178,18 @@ def pairs():
     df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 0,
                                     df_copy["DelayFactor"] == 1)]
     df2 = df1.drop(columns=["DelayFactor"])
-    learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(), orignal=df2.keys())
+    _, _, classifier1 = learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(), orignal=df2.keys())
 
     df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 1,
                                     df_copy["DelayFactor"] == 2)]
     df2 = df1.drop(columns=["DelayFactor"])
-    learn(df2, df1["DelayFactor"].as_matrix() - 1, df2.keys(),
+    _, _, classifier2 = learn(df2, df1["DelayFactor"].as_matrix() - 1, df2.keys(),
           orignal=df2.keys())
 
     df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 2,
                                     df_copy["DelayFactor"] == 3)]
     df2 = df1.drop(columns=["DelayFactor"])
-    learn(df2, df1["DelayFactor"].as_matrix() - 2, df2.keys(),
+    _, _, classifier3 = learn(df2, df1["DelayFactor"].as_matrix() - 2, df2.keys(),
           orignal=df2.keys())
 
     df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 3,
@@ -199,7 +199,7 @@ def pairs():
     s[s == 3] = 0
     df1 = df1.drop(columns=["DelayFactor"])
     df1["DelayFactor"] = s
-    learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
+    _, _, classifier4 = learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
           orignal=df2.keys())
 
     df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 2,
@@ -209,7 +209,7 @@ def pairs():
     s[s == 2] = 1
     df1 = df1.drop(columns=["DelayFactor"])
     df1["DelayFactor"] = s
-    learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
+    _, _, classifier5 = learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
           orignal=df2.keys())
 
     df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 3,
@@ -219,10 +219,10 @@ def pairs():
     s[s == 3] = 1
     df1 = df1.drop(columns=["DelayFactor"])
     df1["DelayFactor"] = s
-    learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
+    _, _, classifier6 = learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
           orignal=df2.keys())
-
-    return
+    classifier1.predict(df2)
+    return [classifier1, classifier2, classifier3, classifier4, classifier5, classifier6]
 
 
 def pre_proc(_dataset, droped_fe, categorical):
