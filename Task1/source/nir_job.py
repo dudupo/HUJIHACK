@@ -48,9 +48,8 @@ def calculate_classifier(data):
     data4 = data["Distance"].to_numpy()
     data5 = data["DayOfWeek"].to_numpy()
 
-
     X, y = pre_proc(data, [], categorical)
-    data_cols = [ (key, np.array(X[key]) ) for key in X.keys() ]
+    data_cols = [(key, np.array(X[key])) for key in X.keys()]
     # ("CRSArrTime", data1), ("CRSDepTime", data2),
     # ("CRSE)lapsedTime", data3), ("Distance", data4),
     # ("DayOfWeek", data5)]
@@ -75,10 +74,42 @@ def calculate_classifier(data):
     return dictionary
 
 
+def pearson_correlation(vec1, vec2):
+    """
+    Calculates the correlation between two vectors
+    :param vec1: vector 1
+    :param vec2: vector 2
+    :return: Their correlation.
+    """
+    cov = np.cov(vec1, vec2)
+    std_vec1 = np.std(vec1)
+    std_vec2 = np.std(vec2)
+    return cov[0, 1] / (std_vec1 * std_vec2)
+
+
 if __name__ == '__main__':
     path_csv = "../train_data.csv"
-    df = pd.read_csv(path_csv)
+    # df = pd.read_csv(path_csv)
+
+    # print(np.random.randint(0,100,20))
+    from numpy.random import default_rng
+
+    np.random.seed(0)
+    rng = default_rng()
+    numbers = rng.choice(20000, size=3000, replace=False)
+    print(numbers)
+
     # df.dropna(inplace=True)
     # print(df)
-    df = df.head(1000)
-    calculate_classifier(df)
+    # df1 = df.loc[df["DelayFactor"] == "LateAircraftDelay"]
+    # df2 = df.loc[df["DelayFactor"] == "CarrierDelay"]
+    # df3 = df.loc[df["DelayFactor"] == "WeatherDelay"]
+    # df4 = df.loc[df["DelayFactor"] == "NASDelay"]
+    # df5 = df[df["DelayFactor"].isnull()]
+    # print(pearson_correlation(df1["CRSElapsedTime"].to_numpy(), df1["ArrDelay"].to_numpy()))
+    # print(pearson_correlation(df2["CRSElapsedTime"].to_numpy(), df2["ArrDelay"].to_numpy()))
+    # print(pearson_correlation(df3["CRSElapsedTime"].to_numpy(), df3["ArrDelay"].to_numpy()))
+    # print(pearson_correlation(df4["CRSElapsedTime"].to_numpy(), df4["ArrDelay"].to_numpy()))
+    # print(pearson_correlation(df5["CRSElapsedTime"].to_numpy(), df5["ArrDelay"].to_numpy()))
+    # df = df.head(1000)
+    # calculate_classifier(df)
