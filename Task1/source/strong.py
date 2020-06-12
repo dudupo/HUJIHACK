@@ -202,7 +202,6 @@ def pairs():
     learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
           orignal=df2.keys())
 
-
     df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 2,
                                     df_copy["DelayFactor"] == 0)]
     df2 = df1.drop(columns=["DelayFactor"])
@@ -212,7 +211,6 @@ def pairs():
     df1["DelayFactor"] = s
     learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
           orignal=df2.keys())
-
 
     df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 3,
                                     df_copy["DelayFactor"] == 0)]
