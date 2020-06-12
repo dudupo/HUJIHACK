@@ -19,7 +19,7 @@ class WeakTeam(DecisionStumpWarper):
         self.featuers = featuers
 
     def filterX( self, X ):
-        ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
+        ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers }))
         return ret
 
     def train(self, X, y, D=None):
@@ -33,6 +33,8 @@ class WeakTeam(DecisionStumpWarper):
                 np.array(self.filterX(X)), y, D)
     
     def predict(self, X):
+        c = X.select_dtypes(np.number).columns
+        X[c] = X[c].fillna(0)
         return super().predict( self.filterX(X) )
 
 def generateTeamClass(featuers):
@@ -129,54 +131,87 @@ def generateYbyString(_dataset, s, treshold=0):
 def pairs():
     df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 0,
                                     df_copy["DelayFactor"] == 1)]
-    df2 = df1.drop(columns=["DelayFactor"])
-    _, _, classifier1 = learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(), orignal=df2.keys())
+    df0 = df1.drop(columns=["DelayFactor"])
+    _, _, classifier1 = learn(df0, df1["DelayFactor"].as_matrix(), df0.keys(),
+                              orignal=df0.keys())
 
-    df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 1,
+    df2 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 1,
                                     df_copy["DelayFactor"] == 2)]
-    df2 = df1.drop(columns=["DelayFactor"])
-    _, _, classifier2 = learn(df2, df1["DelayFactor"].as_matrix() - 1, df2.keys(),
-          orignal=df2.keys())
+    df0 = df2.drop(columns=["DelayFactor"])
+    _, _, classifier2 = learn(df0, df2["DelayFactor"].as_matrix() - 1,
+                              df0.keys(),
+                              orignal=df0.keys())
+    print(df2["DelayFactor"].as_matrix() - 1)
 
-    df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 2,
+    df3 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 2,
                                     df_copy["DelayFactor"] == 3)]
-    df2 = df1.drop(columns=["DelayFactor"])
-    _, _, classifier3 = learn(df2, df1["DelayFactor"].as_matrix() - 2, df2.keys(),
-          orignal=df2.keys())
+    df0 = df3.drop(columns=["DelayFactor"])
+    _, _, classifier3 = learn(df0, df3["DelayFactor"].as_matrix() - 2,
+                              df0.keys(),
+                              orignal=df0.keys())
 
-    df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 3,
+    df4 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 3,
                                     df_copy["DelayFactor"] == 1)]
-    df2 = df1.drop(columns=["DelayFactor"])
-    s = df1["DelayFactor"].as_matrix()
+    df0 = df4.drop(columns=["DelayFactor"])
+    s = df4["DelayFactor"].as_matrix()
     s[s == 3] = 0
-    df1 = df1.drop(columns=["DelayFactor"])
-    df1["DelayFactor"] = s
-    _, _, classifier4 = learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
-          orignal=df2.keys())
+    df4 = df4.drop(columns=["DelayFactor"])
+    df4["DelayFactor"] = s
+    _, _, classifier4 = learn(df0, df4["DelayFactor"].as_matrix(), df0.keys(),
+                              orignal=df0.keys())
 
-    df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 2,
+    df5 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 2,
                                     df_copy["DelayFactor"] == 0)]
-    df2 = df1.drop(columns=["DelayFactor"])
-    s = df1["DelayFactor"].as_matrix()
+    df0 = df5.drop(columns=["DelayFactor"])
+    s = df5["DelayFactor"].as_matrix()
     s[s == 2] = 1
-    df1 = df1.drop(columns=["DelayFactor"])
-    df1["DelayFactor"] = s
-    _, _, classifier5 = learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
-          orignal=df2.keys())
+    df5 = df5.drop(columns=["DelayFactor"])
+    df5["DelayFactor"] = s
+    _, _, classifier5 = learn(df0, df5["DelayFactor"].as_matrix(), df0.keys(),
+                              orignal=df0.keys())
 
-    df1 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 3,
+    df6 = df_copy.loc[np.logical_or(df_copy["DelayFactor"] == 3,
                                     df_copy["DelayFactor"] == 0)]
-    df2 = df1.drop(columns=["DelayFactor"])
-    s = df1["DelayFactor"].as_matrix()
+    df0 = df6.drop(columns=["DelayFactor"])
+    s = df6["DelayFactor"].as_matrix()
     s[s == 3] = 1
-    df1 = df1.drop(columns=["DelayFactor"])
-    df1["DelayFactor"] = s
-    _, _, classifier6 = learn(df2, df1["DelayFactor"].as_matrix(), df2.keys(),
-          orignal=df2.keys())
-    classifier1.predict(df2)
-    return [classifier1, classifier2, classifier3, classifier4, classifier5, classifier6]
+    df6 = df6.drop(columns=["DelayFactor"])
+    df6["DelayFactor"] = s
+    _, _, classifier6 = learn(df0, df6["DelayFactor"].as_matrix(), df0.keys(),
+                              orignal=df0.keys())
+    return [(classifier1, df1.index), (classifier2, df2.index),
+            (classifier3, df3.index), (classifier4, df4.index),
+            (classifier5, df5.index), (classifier6, df6.index)]
 
 
+def predict_pairs(X, list_classifiers):
+
+    def convrt( yy):
+        return (yy + np.ones(len(yy))) /2
+
+    y0 = convrt(list_classifiers[0][0].predict(X))
+    y1 = convrt(list_classifiers[1][0].predict(X))
+    y1[y1 == 0] = 1
+    y1[y1 == 1] = 2
+    y2 = convrt(list_classifiers[2][0].predict(X))
+    y2[y2 == 0] = 2
+    y2[y2 == 1] = 3
+    y3 = convrt(list_classifiers[3][0].predict(X))
+    y3[y3 == 0] = 3
+    y4 = convrt(list_classifiers[4][0].predict(X))
+    y4[y4 == 1] = 2
+    y5 = convrt(list_classifiers[5][0].predict(X))
+    y5[y5 == 1] = 3
+
+    final_result = np.concatenate((y0, y1, y2, y3, y4, y5), axis=0).reshape(
+        (6, y0.shape[0])).T
+    counts = np.apply_along_axis(np.bincount, 1, final_result.astype(np.int))
+    final_result = np.apply_along_axis(np.argmax, 1, counts).astype(np.str)
+    final_result[final_result == '0'] = "CarrierDelay"
+    final_result[final_result == '1'] = "WeatherDelay"
+    final_result[final_result == '2'] = "NASDelay"
+    final_result[final_result == '3'] = "LateAircraftDelay"
+    return final_result
 
 
 def pre_proc(_dataset, droped_fe, categorical ):
@@ -240,10 +275,6 @@ if __name__ == "__main__" :
     _minrange, _maxrange = -30, 30
     _dataset, y, x_factor,y_factor = final_pre_proc(original_dataset)
 
-    # df_copy = _dataset.copy()
-    # df_copy["DelayFactor"] = y_factor
-    # pairs()
-
     print( _dataset)
 
     start_range , end_range = np.ones(len(y)) * _minrange , np.ones(len(y)) * _maxrange
@@ -255,24 +286,6 @@ if __name__ == "__main__" :
         print(f"{time} : {_featuers} : {train_error}")
 
     Bagent = binarysearch( _mods ) 
-    # _middles = Bagent.predict( _dataset , start_range , end_range)
-    # print(_middles)
-
-    # _dataset, y, x_factor, y_factor = final_pre_proc(
-    #     pd.read_csv("~/data/train_data.csv", nrows=10000)[9800:])
-    
-    # _dataset, y = pre_proc(original_dataset, droped_fe , categorical )
-    # _middles = Bagent.mods[0.0].predict(_dataset)
-    # _middles[_middles > 0] = 1
-    # t = sum((_middles - y.flatten()) ** 2 / len(y))
-    # print(f"[error]: {t}")
-    # print( )
-
-    # _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=10000 )[9800:] )
-    # _middles = Bagent.mods[0.0].predict( _dataset )
-    # _middles[ _middles > 0 ] = 1
-    # t = sum( (_middles- y.flatten())**2/len(y))
-    # print (  f"[error]: {t}"  )  
 
     with open("./BinAgent", "wb") as f:
         pickle.dump(Bagent, f)

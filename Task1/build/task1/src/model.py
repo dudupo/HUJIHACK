@@ -11,7 +11,7 @@ Author(s):
 import pandas as pd
 import pickle
 from classifier import final_pre_proc_test
-from strong  import WeakTeam 
+from strong  import WeakTeam, predict_pairs
 from binarysearch import binarysearch
 from adaboost import AdaBoost 
 from ex4_tools import DecisionStump
@@ -23,7 +23,8 @@ class FlightPredictor:
         @param path_to_weather: The path to a csv file containing weather data.
         """
         #raise NotImplementedError
-        self.mod = pickle.load(open("./BinAgent" , "rb"))  
+        self.mod = pickle.load(open("./BinAgent" , "rb"))
+        self.classifiers = pickle.load(open("./NirAgent" , "rb"))
 
     def predict(self, x):
         """
@@ -32,11 +33,14 @@ class FlightPredictor:
         @param x: A pandas DataFrame with shape (m, 15)
         @return: A pandas DataFrame with shape (m, 2) with your prediction
         """
-
+        df = pd.DataFrame( )
         _dataset = final_pre_proc_test(x)
-        _late_data_set = self.mod.predict(x)  
-        
-        #middles = self.mod.predict(x) 
+        _delay_data_set = self.mod.predict(x) 
+        df["PredArrDelay"] = _delay_data_set
+        _delay = _dataset[ _delay_data_set >  0  ]
+        df["PredDelayFactor"][ _delay_data_set >  0  ] = prdict_paris(self.classifiers, _delay)
+        print( df )
+        return df
 
 
 
