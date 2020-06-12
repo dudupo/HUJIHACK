@@ -9,7 +9,7 @@ from datetime import date
 from random import shuffle
 from sklearn.model_selection import train_test_split
 from geopy.geocoders import Nominatim, ArcGIS
-
+import json
 import math
 factor_reason = {'CarrierDelay': 0, 'WeatherDelay': 1, 'NASDelay': 2, 'LateAircraftDelay': 3}
 
@@ -36,10 +36,26 @@ factor_reason = {'CarrierDelay': 0, 'WeatherDelay': 1, 'NASDelay': 2, 'LateAircr
 #     return _dataset_prepoc, y_factor
 
 
+
+def proc_weather( _dataset ):
+    weather = json.loads( open("wether.json").read().replace("'", "\"") )
+    for index, row in _dataset.iterrows():
+        _date = f"{row['day']:02d}-{row['month']:02d}-{row['year']%2000}" 
+        if _date in weather:
+            for key, val in weather[ _date ].items():
+                if key != 'day':
+                    row[key] = val
+
+
+
 def pre_proc_class(_dataset, categorical):
+
+
     _dataset['month'] = pd.DatetimeIndex(_dataset['FlightDate']).month
     _dataset['day'] = pd.DatetimeIndex(_dataset['FlightDate']).day
     _dataset['year'] = pd.DatetimeIndex(_dataset['FlightDate']).year
+        
+    proc_weather( _dataset )
 
     for index, row in _dataset.iterrows():
         # _dataset.loc[index, 'CRSElapsedTime'] = math.floor(row['CRSElapsedTime'] / 10)
@@ -54,7 +70,6 @@ def pre_proc_class(_dataset, categorical):
 
     def DynmicGeo( df, _keys ):
         import time
-        import json
         from pprint import pprint
 
         #Dynmic = {} 
@@ -227,7 +242,7 @@ def final_pre_proc(_dataset):
     return x_delay, y_delay, x_factor,y_factor
 
 if __name__ == '__main__':
-    _dataset = pd.read_csv("~/data/train_data.csv", nrows=4)
+    _dataset = pd.read_csv("~/data/train_data.csv")
 
     x = pre_proc_class(_dataset, categorical_new)
     

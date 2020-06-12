@@ -11,6 +11,11 @@ Author(s):
 import pandas as pd
 import pickle
 from classifier import final_pre_proc
+from strong  import WeakTeam 
+from binarysearch import binarysearch
+from adaboost import AdaBoost 
+from ex4_tools import DecisionStump
+
 class FlightPredictor:
     def __init__(self, path_to_weather=''):
         """
@@ -18,7 +23,7 @@ class FlightPredictor:
         @param path_to_weather: The path to a csv file containing weather data.
         """
         #raise NotImplementedError
-        self.mod = pickle.load("./BinAgent")  
+        self.mod = pickle.load(open("./BinAgent" , "rb"))  
 
     def predict(self, x):
         """
@@ -27,6 +32,6 @@ class FlightPredictor:
         @param x: A pandas DataFrame with shape (m, 15)
         @return: A pandas DataFrame with shape (m, 2) with your prediction
         """
-        
+
         _dataset, y, x_factor,y_factor = final_pre_proc(x)
         self.mod.predict(x)

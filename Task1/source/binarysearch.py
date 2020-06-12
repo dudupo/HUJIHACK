@@ -1,4 +1,5 @@
 import numpy as np
+import re
 
 
 class binarysearch:
@@ -30,6 +31,21 @@ class binarysearch:
             res = (res +  np.ones(len(res)))/2
             start_range, end_range = (1 - res) * start_range + res * middle  , (1 - res) * middle +  res * end_range
         return middle
+
+    def dump(self, _file):
+        with open(_file, "w") as f :
+            _str = ""
+            for treshold, _mod in self._mods.items() : 
+                _str += f"{treshold}:" +_mod.dump( ) + "\n$"
+            
+            _file.write(_str)
+
+def binarysearch_read(_file):
+    mods = {}
+    for banch in re.split('$', _file.read()):
+        treshold, _strmod = re.split(':', banch)
+        mods[float(treshold)] = AdaBoost_read( )
+
 
 
 

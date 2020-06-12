@@ -22,7 +22,8 @@ class AdaBoost(object):
         WL : the class of the base weak learner
         T : the number of base learners to learn
         """
-        self.WL = [ WL for _ in range(T)]
+        WL, self.fe = WL
+        self.WL = [ WL  for _ in range(T)]
         self.T = T
         self.h = [None]*T     # list of base learners
         self.w = np.zeros(T)  # weights
@@ -53,7 +54,7 @@ class AdaBoost(object):
         self.w = []
 
         for i in range(self.T):
-            self.h[i] = self.WL[i]()
+            self.h[i] = self.WL[i](self.fe)
             if self.support_wights:
                 self.h[i].train(X, y, D)
             else:

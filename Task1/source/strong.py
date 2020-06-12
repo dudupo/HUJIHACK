@@ -50,38 +50,47 @@ from sklearn.model_selection import train_test_split
 #                 "Distance" : WeakFactory ( DecisionTree(max_depth=2) ),
 #                 "ArrDelay" : WeakFactory ( DecisionTree(max_depth=2) ),
 #                 "DelayFacto" : WeakFactory ( DecisionTree(max_depth=2) )
-#         }
 
-def generateTeamClass(featuers):
-    def generateWeakClass(Type):
-        class WeakTeam(Type):
-
-            def __init__(self):
-                Type.__init__(self)
-                self.featuers = featuers
-
-            def filterX( self, X ):
-                ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
-                return ret
-
-            def train(self, X, y, D=None):
-                #print(f"[@] train on features : { self.featuers}")
-                
-                if D is None:
-                    super().fit(
-                        np.array(self.filterX(X)),  y)
-                else:
-                    super().fit(
-                        np.array(self.filterX(X)), y, D)
-            
-            def predict(self, X):
-                return super().predict( self.filterX(X) )
         
-        return WeakTeam
     #return generateWeakClass( DecisionTree ) 
     # return generateWeakClass( Logistic )
 
-    return generateWeakClass(DecisionStumpWarper)
+# " extracrd out for pickiling "
+class WeakTeam(DecisionStumpWarper):
+
+    def __init__(self, featuers=True):
+        DecisionStumpWarper.__init__(self)
+        self.featuers = featuers
+
+    def filterX( self, X ):
+        ret = np.array( pd.DataFrame( { featuer:  X[featuer] for featuer in self.featuers  }))
+        return ret
+
+    def train(self, X, y, D=None):
+        #print(f"[@] train on features : { self.featuers}")
+        
+        if D is None:
+            super().fit(
+                np.array(self.filterX(X)),  y)
+        else:
+            super().fit(
+                np.array(self.filterX(X)), y, D)
+    
+    def predict(self, X):
+        return super().predict( self.filterX(X) )
+
+def generateTeamClass(featuers):
+    return (WeakTeam, featuers)
+
+
+# 
+
+
+# def binarysearch_read(_file):
+#     mods = {}
+#     for banch in re.split('$', _file.read()):
+#         treshold, _strmod = re.split(':', banch)
+#         mods[float(treshold)] = AdaBoost_read(banch)
 
 
 def calc_error(model, _dataframe, y, agents):
@@ -104,12 +113,12 @@ def hash_strings(featuers, _list):
         base*= 10
     return ret 
 
-def learn(_dataframe, y, featuers, teams= set(), depth = 5, orignal=[] , _hased = set()):
+def learn(_dataframe, y, featuers, teams= set(), depth = 0, orignal=[] , _hased = set()):
 
     if len(teams) == 0:
         teams = [ [featuer] for  featuer in featuers  ]
 
-    agents = 20
+    agents = 1
     _hashed = set()
     new_team = []
     def create_subgroups():
@@ -221,23 +230,24 @@ if __name__ == "__main__" :
 
 
     start_range , end_range = np.ones(len(y)) * _minrange , np.ones(len(y)) * _maxrange
-    for i, time in enumerate( np.arange(_minrange, _maxrange,  _maxrange/ 2**5 ) ):
+    for i, time in enumerate( np.arange(_minrange, _maxrange,  (_maxrange-_minrange)/ 2 ) ):
         train_error, _featuers, _mods[time] = learn(_dataset,
                         generateY(original_dataset, time), 
                             _dataset.keys(), orignal=_dataset.keys())  
         print( f"{time} : {_featuers} : {train_error}")
 
     Bagent = binarysearch( _mods ) 
-    _middles = Bagent.predict( _dataset , start_range , end_range)
-    print(_middles)
+    # _middles = Bagent.predict( _dataset , start_range , end_range)
+    # print(_middles)
 
     # _dataset, y, x_factor,y_factor= final_pre_proc( pd.read_csv("~/data/train_data.csv", nrows=10000 )[9800:] )
     # _middles = Bagent.mods[0.0].predict( _dataset )
     # _middles[ _middles > 0 ] = 1
     # t = sum( (_middles- y.flatten())**2/len(y))
     # print (  f"[error]: {t}"  )  
-    with open("./BinAgent") as f:
-        pickle.dump(f, Bagent)
+
+    with open("./BinAgent", "wb") as f:
+        pickle.dump(Bagent, f)
 
 
 
